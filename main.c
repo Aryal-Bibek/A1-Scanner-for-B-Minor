@@ -15,7 +15,6 @@ void run_scan(const char *filename);
 
 int main(int argc, char *argv[])
 {
-
     if (argc < 3)
     {
         fprintf(stderr, "Usage: %s -scan sourcefile.bminor\n", argv[0]);
@@ -40,7 +39,6 @@ int main(int argc, char *argv[])
 
 void run_scan(const char *filename)
 {
-    
     FILE* file = fopen(filename, "r");
     if (file != NULL){
         yyin = file;
@@ -48,8 +46,8 @@ void run_scan(const char *filename)
         token_t token;
         while((token = yylex()) != 0){
             
-
-        printToken(token);
+       
+        printToken(token,yylineno,yytext);
 
         }
     }
