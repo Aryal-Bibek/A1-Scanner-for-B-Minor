@@ -47,6 +47,8 @@ typedef enum {
      TOKEN_CRB,
      TOKEN_SLB,
      TOKEN_SRB,
+     TOKEN_COLON,
+     TOKEN_COMMA,
      TOKEN_ERROR =100,
 } token_t;
 

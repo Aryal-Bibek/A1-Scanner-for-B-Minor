@@ -6,7 +6,7 @@
 
 /* You may use this file to add any helper functions you need. */
 
-void printToken(int token, int line, char* text){
+void printToken(int token, int line, char * text){
     switch(token){
      case 0:
         printf("TOKEN_EOF\n");
@@ -188,9 +188,16 @@ void printToken(int token, int line, char* text){
         printf("TOKEN_SRB\n");
         break;
     
+    case 45:
+        printf("TOKEN_COLON\n");
+        break;
+
+    case 46:
+        printf("TOKEN_COMMA\n");    
+        break;
 
      case 100:
-        printf("TOKEN_ERROR : unexpected character '%s' at line %d\n",text,line);
-        break;
+        printf("TOKEN_ERROR, unexpected character %s at line %d\n",text,line);
+        exit(1);
 }
 }

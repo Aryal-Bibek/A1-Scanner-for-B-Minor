@@ -9,6 +9,9 @@
 
 DIGIT  [0-9]
 LETTER [a-zA-Z]
+SYMBOL   [!@#$%^&*()_+.\/|:;,{}[`~\]><= ]
+ESCAPE \\[a-z0-9'"]
+
 %%
 (" "|\t|\n|\/\/.*|\/*.*\*\/)  /* skip whitespace */
 
@@ -38,15 +41,17 @@ function                        { return TOKEN_FUNCTION;}
 return                          { return TOKEN_RETURN;}
 (_|{LETTER})(_|{LETTER}|{DIGIT})*                                    { return TOKEN_IDENT; }
 {DIGIT}+                        { return TOKEN_INTEGER_LITERAL; }
-\'({LETTER}|{DIGIT})\'         { return TOKEN_CHAR_LITERAL;}
-\"({LETTER}|{DIGIT})*\"               { return TOKEN_STRING_LITERAL;}
+\'({LETTER}|{DIGIT}|{SYMBOL}|{ESCAPE}|\")\'         { return TOKEN_CHAR_LITERAL;}
+\"({LETTER}|{DIGIT}|{SYMBOL}|{ESCAPE}|'|\\)*\"              { return TOKEN_STRING_LITERAL;}
 ==                              { return TOKEN_EQ;}
 !=                              { return TOKEN_NE;}
 >=                              { return TOKEN_GE;}
-\<=                              { return TOKEN_LE;}
+\<=                             { return TOKEN_LE;}
 =                               { return TOKEN_ASSIGNMENT;}
 >                               { return TOKEN_GT;}
-\<                               { return TOKEN_LT;}
+\<                              { return TOKEN_LT;}
+,                               { return TOKEN_COMMA;}
+:                               { return TOKEN_COLON;}
 ;                               { return TOKEN_SEMICOLON;}
 &&                              { return TOKEN_AND;}
 \|\|                            { return TOKEN_OR;}
@@ -54,8 +59,8 @@ return                          { return TOKEN_RETURN;}
 \)                              { return TOKEN_RB;}
 \{                              { return TOKEN_CLB;}
 \}                              { return TOKEN_CRB;}
-\[                              {return TOKEN_SLB;}
-\]                              {return TOKEN_SRB;}
+\[                              { return TOKEN_SLB;}
+\]                              { return TOKEN_SRB;}
 .                               { return TOKEN_ERROR;}
 %%
 
