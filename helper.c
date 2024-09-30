@@ -6,7 +6,7 @@
 
 /* You may use this file to add any helper functions you need. */
 
-void printToken(int token, int line, char * text){
+void printToken(int token, int line, char *text){
     switch(token){
      case 0:
         printf("TOKEN_EOF\n");
@@ -57,11 +57,17 @@ void printToken(int token, int line, char * text){
         break;
 
     case 12:
-        printf("TOKEN_IDENT\n");
-        break;
+        if(strlen(text) > 256){
+            printf("TOKEN_ERROR, identifier exceeds 256 characters %s at line %d\n",text,line);
+            exit(1);
+        }
+        else{
+            printf("TOKEN_IDENT: %s\n", text);
+            break;
+        }
 
     case 13:
-        printf("TOKEN_INTEGER_LITERAL\n");
+        printf("TOKEN_INTEGER_LITERAL: %s\n", text);
         break;
 
     case 14:
@@ -97,11 +103,19 @@ void printToken(int token, int line, char * text){
         break;
 
     case 22:
-        printf("TOKEN_CHAR_LITERAL\n");
-        break;
-
+        if(text[1] == '\\'){
+            printf("TOKEN_CHAR_LITERAL: %c%c\n",text[1],text[2]);
+            break;
+        }
+        else{
+            printf("TOKEN_CHAR_LITERAL: %c\n",text[1]);
+            break;
+        }
     case 23:
-        printf("TOKEN_STRING_LITERAL\n");
+        char unquoted_string[300];
+        strncpy(unquoted_string, text +1 , strlen(text) -2);
+        unquoted_string[strlen(text) - 2] = '\0';
+        printf("TOKEN_STRING_LITERAL: %s\n",unquoted_string);
         break;
 
     case 24:
