@@ -1,3 +1,4 @@
+
 %{
 #include "token.h"
 #include "helper.h"
@@ -10,7 +11,7 @@
 DIGIT  [0-9]
 LETTER [a-zA-Z]
 SYMBOL   [!@#$%^&*()_+.\/|:;,{}[`~\]><= ]
-ESCAPE \\[a-z0-9'"]
+ESCAPE \\[a-z0-9'"\\]
 
 %%
 (" "|\t|\n|\/\/.*|\/*.*\*\/)  /* skip whitespace */
@@ -42,7 +43,7 @@ return                          { return TOKEN_RETURN;}
 (_|{LETTER})(_|{LETTER}|{DIGIT})*                                    { return TOKEN_IDENT; }
 {DIGIT}+                        { return TOKEN_INTEGER_LITERAL; }
 \'({LETTER}|{DIGIT}|{SYMBOL}|{ESCAPE}|\")\'         { return TOKEN_CHAR_LITERAL;}
-\"({LETTER}|{DIGIT}|{SYMBOL}|{ESCAPE}|'|\\)*\"              { return TOKEN_STRING_LITERAL;}
+\"({LETTER}|{DIGIT}|{SYMBOL}|{ESCAPE}|'){0,256}\"	{ return TOKEN_STRING_LITERAL;}
 ==                              { return TOKEN_EQ;}
 !=                              { return TOKEN_NE;}
 >=                              { return TOKEN_GE;}
