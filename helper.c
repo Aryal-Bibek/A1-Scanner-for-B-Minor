@@ -115,6 +115,51 @@ void printToken(int token, int line, char *text){
         char unquoted_string[300];
         strncpy(unquoted_string, text +1 , strlen(text) -2);
         unquoted_string[strlen(text) - 2] = '\0';
+	for (int i=0;i<strlen(unquoted_string);i++) {
+		if (unquoted_string[i]=='\\') {
+			if (i+1 < strlen(unquoted_string)){
+				if (unquoted_string[i+1]=='n'){
+					unquoted_string[i]='\n';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+				} else if (unquoted_string[i+1]=='t'){
+					unquoted_string[i]='\t';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string)-i);
+				} else if (unquoted_string[i+1]=='?'){
+					unquoted_string[i]='\?';
+					memmove(&unquoted_string[i], &unquoted_string[i + 1], strlen(unquoted_string) - i);
+				}else if (unquoted_string[i+1]=='r'){
+                                        unquoted_string[i]='\r';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='\\'){
+                                        unquoted_string[i]='\\';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='a'){
+                                        unquoted_string[i]='\a';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='v'){
+                                        unquoted_string[i]='\v';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='e'){
+                                        unquoted_string[i]='\e';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                }else if (unquoted_string[i+1]=='f'){
+                                        unquoted_string[i]='\f';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='b'){
+                                        unquoted_string[i]='\b';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='\"'){
+                                        memmove(&unquoted_string[i], &unquoted_string[i + 1], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='\''){
+                                        memmove(&unquoted_string[i], &unquoted_string[i + 1], strlen(unquoted_string) - i);
+                                } else if (unquoted_string[i+1]=='0'){
+                                        unquoted_string[i]='\0';
+                                        memmove(&unquoted_string[i+1], &unquoted_string[i + 2], strlen(unquoted_string) - i);
+                                }  
+
+			}
+		}
+	}
         printf("TOKEN_STRING_LITERAL: %s\n",unquoted_string);
         break;
 
