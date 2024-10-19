@@ -94,7 +94,7 @@ struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
     ;
     factor: TOKEN_SUBTRACT factor
     | TOKEN_LB expr TOKEN_RB
-    | TOKEN_INTEGER_LITERAL {printf("F $1=%d %s\n",$1,$1);$$=expr_create_integer_literal(atoi($1));}
+    | TOKEN_INTEGER_LITERAL {printf("F $1=%s\n",$1);$$=expr_create_integer_literal(atoi($1));}
     ;
 %%
 
