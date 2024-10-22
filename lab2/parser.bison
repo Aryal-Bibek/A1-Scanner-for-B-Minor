@@ -25,6 +25,8 @@ struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
 	d->right = right;
 	return d;
 }
+
+struct expr parser_result;
 %}
 
 %token TOKEN_INTEGER_LITERAL
@@ -84,16 +86,16 @@ struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
     ;
 
     expr : expr TOKEN_ADD term {printf("E + T. \n");$$= expr_create(EXPR_ADD,$1,$3);} 
-    | expr TOKEN_SUBTRACT term
+    | expr TOKEN_SUBTRACT term {printf("E - T. \n");$$= expr_create(EXPR_SUB,$1,$3);} 
     | term {printf("E\n");$$=$1;}
     ;
 
-    term : term TOKEN_MULTIPLY factor
-    | term TOKEN_DIVIDE factor
+    term : term TOKEN_MULTIPLY factor {printf("T * F\n");$$= expr_create(EXPR_MUL,$1, $3);}
+    | term TOKEN_DIVIDE factor {printf("T / F\n");$$=expr_create(EXPR_DIV,$1, $3);}
     | factor {printf("T\n");$$=$1;}
     ;
-    factor: TOKEN_SUBTRACT factor
-    | TOKEN_LB expr TOKEN_RB
+    factor: TOKEN_SUBTRACT factor {printf("-F\n");$$= expr_create_integer_literal(atoi($1)*(-1));} 
+    | TOKEN_LB expr TOKEN_RB {printf("(E) \n");} 
     | TOKEN_INTEGER_LITERAL {printf("F $1=%s\n",$1);$$=expr_create_integer_literal(atoi($1));}
     ;
 %%

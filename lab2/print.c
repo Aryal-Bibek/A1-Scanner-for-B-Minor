@@ -103,6 +103,9 @@ void expr_print(struct expr *e, int parent_prec, int is_array_start)
         return;
     int current_prec = get_precedence(e);
 
+    //setbuf(stdout, NULL);
+    //printf("hello\n");
+    printf("\n%d\n",e->kind);
     // Handle leaf nodes (literals and names)
     if (!(e->left) && !(e->right))
     {
