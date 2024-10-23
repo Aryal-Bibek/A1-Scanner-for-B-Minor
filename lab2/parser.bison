@@ -4,6 +4,10 @@
 #include <string.h>
 #include "helper.h"
 #include "expr.h"
+#include "decl.h"
+#include "type.h"
+#include "stmt.h"
+#incldue "symbol.h"
 
 
 extern char *yytext;
