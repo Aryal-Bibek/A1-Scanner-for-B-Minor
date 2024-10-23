@@ -7,7 +7,7 @@
 #include "decl.h"
 #include "type.h"
 #include "stmt.h"
-#incldue "symbol.h"
+#include "symbol.h"
 
 
 extern char *yytext;
@@ -43,7 +43,7 @@ struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
 
 struct type * type_create( type_t kind, struct type *subtype, struct param_list *params )
 {
-    stuct type *t = malloc(sizeof(*t));
+    struct type *t = malloc(sizeof(*t));
     t->kind=kind;
     t->subtype=subtype;
     t->param_list=params;
