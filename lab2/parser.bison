@@ -10,6 +10,17 @@ extern char *yytext;
 extern int yylex();
 int yyerror( char *str);
 
+struct decl * decl_create( char *name,struct type *type,struct expr *value,struct stmt *code,struct decl *next )
+{
+    struct decl *d = malloc(sizeof(*d));
+    d->name = name;
+    d->type = type;
+    d->value = value;
+    d->code = code;
+    d->next = next;
+    return d;
+}
+
 struct expr * expr_create_integer_literal(int literal_value){
 	struct expr *d = malloc(sizeof(*d));
 	d->kind=EXPR_INTEGER_LITERAL;
@@ -26,7 +37,15 @@ struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
 	return d;
 }
 
-struct expr parser_result;
+struct type * type_create( type_t kind, struct type *subtype, struct param_list *params )
+{
+    stuct type *t = malloc(sizeof(*t));
+    t->kind=kind;
+    t->subtype=subtype;
+    t->param_list=params;
+}
+
+struct decl* parser_result;
 %}
 
 %token TOKEN_INTEGER_LITERAL
@@ -81,6 +100,33 @@ struct expr parser_result;
 
 
 /* Here is the grammar: program is the start symbol. */
+
+    program : decl_list { parser_result = $1; }
+    ;
+
+    decl_list : decl decl_list { $$ = $1; $1->next = $2; }
+    | /* epsilon */ { $$ = 0; }
+    ;
+
+    decl : name TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); }
+    | name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0); }
+    | name TOKEN_COLON TOKEN_FUNCTION type TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB/*function*/
+    ;
+
+    stmt_list : stmt stmt_list
+    | /*epsilon*/
+    ;
+    
+    type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  NULL,NULL);}
+    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL);}
+    | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  NULL,NULL);}
+    | TOKEN_CHAR ($$ = type_create(TYPE_CHARACTER,  NULL,NULL);)
+    | TOKEN_STRING ($$ = type_create(TYPE_STRING,  NULL,NULL);)
+    ;
+
+    stmt:
+    ;
+
 
     program : expr TOKEN_SEMICOLON{printf("P\n");expr_print($1,0,0);}
     ;
