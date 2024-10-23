@@ -105,7 +105,7 @@ struct decl* parser_result;
 
 /* Here is the grammar: program is the start symbol. */
 
-    program : decl_list { parser_result = $1; }
+    program : decl_list { printf("program\n");}
     ;
 
     decl_list : decl decl_list { $$ = $1; $1->next = $2; }
