@@ -117,6 +117,7 @@ struct decl* parser_result;
     | /*epsilon*/
     ;
     name: TOKEN_IDENT{$$=$1;}
+    ;
 
     type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  NULL,NULL);}
     | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL);}
