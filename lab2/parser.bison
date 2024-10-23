@@ -120,8 +120,8 @@ struct decl* parser_result;
     type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  NULL,NULL);}
     | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL);}
     | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  NULL,NULL);}
-    | TOKEN_CHAR ($$ = type_create(TYPE_CHARACTER,  NULL,NULL);)
-    | TOKEN_STRING ($$ = type_create(TYPE_STRING,  NULL,NULL);)
+    | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  NULL,NULL);}
+    | TOKEN_STRING {$$ = type_create(TYPE_STRING,  NULL,NULL);}
     ;
 
     stmt:
