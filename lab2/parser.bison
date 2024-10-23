@@ -110,7 +110,7 @@ struct decl* parser_result;
 
     decl : name TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); }
     | name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0); }
-    | name TOKEN_COLON TOKEN_FUNCTION type TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB/*function*/
+    /*| name TOKEN_COLON TOKEN_FUNCTION type TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB*/
     ;
 
     stmt_list : stmt stmt_list
