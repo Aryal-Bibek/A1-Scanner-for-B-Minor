@@ -46,7 +46,7 @@ struct type * type_create( type_t kind, struct type *subtype, struct param_list 
     struct type *t = malloc(sizeof(*t));
     t->kind=kind;
     t->subtype=subtype;
-    t->param_list=params;
+    t->params=params;
 }
 
 struct decl* parser_result;
