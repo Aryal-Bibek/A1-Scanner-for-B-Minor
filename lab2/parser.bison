@@ -116,7 +116,8 @@ struct decl* parser_result;
     stmt_list : stmt stmt_list
     | /*epsilon*/
     ;
-    
+    name: TOKEN_IDENT{$$=$1;}
+
     type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  NULL,NULL);}
     | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL);}
     | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  NULL,NULL);}
