@@ -17,20 +17,44 @@ int yyerror( char *str);
 
 struct decl * decl_create( char *name,struct type *type,struct expr *value,struct stmt *code,struct decl *next )
 {
-    struct decl *d = malloc(sizeof(*d));
-    d->name = name;
-    d->type = type;
-    d->value = value;
-    d->code = code;
-    d->next = next;
-    return d;
+    struct decl *e = malloc(sizeof(*e));
+    e->name = name;
+    e->type = type;
+    e->value = value;
+    e->code = code;
+    e->next = next;
+    return e;
 }
 
 struct expr * expr_create_integer_literal(int literal_value){
-	struct expr *d = malloc(sizeof(*d));
-	d->kind=EXPR_INTEGER_LITERAL;
-	d->literal_value=literal_value;
-	return d;
+	struct expr *e = malloc(sizeof(*e));
+	e->kind=EXPR_INTEGER_LITERAL;
+	e->literal_value=literal_value;
+	return e;
+}
+
+struct expr * expr_create_boolean_literal( int c ){
+    
+    struct expr *e = malloc(sizeof(*e));
+    e->kind=EXPR_BOOLEAN_LITERAL;
+    e->literal_value=c;
+    return e;
+}
+
+struct expr * expr_create_char_literal( char c ){
+    printf("\n\n hi 2 %c\n\n",c);
+    struct expr *e = malloc(sizeof(*e));
+    e->kind=EXPR_CHAR_LITERAL;
+    e->literal_value=c;
+    return e;
+}
+struct expr * expr_create_string_literal( const char *str ){
+    struct expr *e = malloc(sizeof(*e));
+    e->kind=EXPR_STRING_LITERAL;
+    char * newStr = malloc(sizeof(str)-2);
+    memcpy(newStr,str+1, strlen(str)-2);
+    e->string_literal=newStr;
+    return e;
 }
 
 struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
@@ -77,7 +101,7 @@ struct param_list * param_list_create( char *name, struct type *type, struct par
 struct decl* parser_result;
 %}
 
-%token TOKEN_INTEGER_LITERAL
+%token <num> TOKEN_INTEGER_LITERAL
 %token TOKEN_ADD
 %token TOKEN_SUBTRACT
 %token TOKEN_MULTIPLY
@@ -103,8 +127,8 @@ struct decl* parser_result;
 %token TOKEN_FUNCTION
 %token TOKEN_RETURN
 %token <name> TOKEN_IDENT
-%token TOKEN_CHAR_LITERAL
-%token TOKEN_STRING_LITERAL
+%token <name> TOKEN_CHAR_LITERAL
+%token <name> TOKEN_STRING_LITERAL
 %token TOKEN_EQ
 %token TOKEN_NE
 %token TOKEN_GE
@@ -129,14 +153,17 @@ struct decl* parser_result;
 struct decl *decl;
 struct type *type;
 struct stmt *stmt;
+struct expr *expr;
 struct param_list *param_list;
 char *name;
+int num;
 };
 
 %type <decl> program decl_list decl 
-%type <type> type type_func
+%type <type> type type_func type_array
 %type <stmt> stmt_list stmt
 %type <param_list> param_list param
+%type <expr> expr term factor_bigger factor_smaller alpha
 %type <name> name 
 
 
@@ -154,8 +181,9 @@ char *name;
     ;
 
     decl : name TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); printf("decl creat name is %s\n", $$->name); }
-    /*| name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0); }*/
+    | name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0);}
     | name TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
+    | name TOKEN_COLON type_array TOKEN_SEMICOLON {$$ = decl_create($1,$3,0,0,0);}
     ;
 
     stmt_list : stmt stmt_list {$$=$1;$1->next=$2;}
@@ -175,36 +203,43 @@ char *name;
 
     name: TOKEN_IDENT {printf("name $1=%s\n",$1);$$=$1;}
     ;
+    
+    type_array: TOKEN_ARRAY TOKEN_SLB TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $4,0);}
+    | TOKEN_ARRAY TOKEN_SLB factor_smaller TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $5,0);$$->array_size=$3->literal_value;}
+    ;
 
     type_func : TOKEN_FUNCTION type {$$= type_create(TYPE_FUNCTION,$2,0);printf("Function type\n");}
     ;
 
-    type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  NULL,NULL);}
-    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL); printf("integer\n");}
-    | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  NULL,NULL);}
-    | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  NULL,NULL);}
-    | TOKEN_STRING {$$ = type_create(TYPE_STRING,  NULL,NULL);}
+    type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  0,0);}
+    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  0,0); printf("integer\n");}
+    | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  0,0);}
+    | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  0,0);}
+    | TOKEN_STRING {$$ = type_create(TYPE_STRING,  0,0);}
     ;
-
     
-
-    /*
-
 
     expr : expr TOKEN_ADD term {printf("E + T. \n");$$= expr_create(EXPR_ADD,$1,$3);} 
     | expr TOKEN_SUBTRACT term {printf("E - T. \n");$$= expr_create(EXPR_SUB,$1,$3);} 
     | term {printf("E\n");$$=$1;}
+    | alpha {$$=$1;}
     ;
 
-    term : term TOKEN_MULTIPLY factor {printf("T * F\n");$$= expr_create(EXPR_MUL,$1, $3);}
-    | term TOKEN_DIVIDE factor {printf("T / F\n");$$=expr_create(EXPR_DIV,$1, $3);}
-    | factor {printf("T\n");$$=$1;}
+    alpha: TOKEN_STRING_LITERAL {$$=expr_create_string_literal($1);}
+    | TOKEN_CHAR_LITERAL {$$ = expr_create_char_literal($1[1]);printf("\n \n hello %s %c \n \n",$1,$1[1]);}
+
+    term : term TOKEN_MULTIPLY factor_bigger {printf("T * F\n");$$= expr_create(EXPR_MUL,$1, $3);}
+    | term TOKEN_DIVIDE factor_bigger {printf("T / F\n");$$=expr_create(EXPR_DIV,$1, $3);}
+    | factor_bigger {printf("T\n");$$=$1;}
     ;
-    factor: TOKEN_SUBTRACT factor {printf("-F\n");$$= expr_create_integer_literal(atoi($1)*(-1));} 
-    | TOKEN_LB expr TOKEN_RB {printf("(E) \n");} 
-    | TOKEN_INTEGER_LITERAL {printf("F $1=%s\n",$1);$$=expr_create_integer_literal(atoi($1));}
+    factor_bigger : TOKEN_LB expr TOKEN_RB {printf("(E) \n");$$=$2;}
+    | TOKEN_SUBTRACT factor_smaller {printf("-F\n"); $2->literal_value*=-1;$$=$2;} 
+    | factor_smaller {$$=$1;}
     ;
-    */
+
+    factor_smaller:  TOKEN_INTEGER_LITERAL {printf("F $1=%s\n",$1);$$=expr_create_integer_literal(atoi($1));}
+    ;
+    
 %%
 
 /* This function is called whenever the parser fails to parse the input */
