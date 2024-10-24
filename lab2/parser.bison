@@ -239,7 +239,7 @@ int num;
     empty_param_list : {$$=0;}
     ;
 
-    param: TOKEN_IDENT TOKEN_COLON type {$$=param_list_create($1,$3, 0);}
+    param: TOKEN_IDENT TOKEN_COLON type_array_smaller {$$=param_list_create($1,$3, 0);}
     ;
 
 
@@ -299,16 +299,15 @@ int num;
     | term TOKEN_EXPONENT factor_bigger {$$= expr_create(EXPR_EXP,$1,$3);}
     | factor_bigger {$$=$1;}
     ;
-    factor_bigger : TOKEN_LB expr TOKEN_RB {printf("(E) \n");$$=$2;}
-    | TOKEN_SUBTRACT factor_smaller {$2->literal_value*=-1;$$=$2;} 
-    | factor_smaller {$$=$1;}
+    factor_bigger : factor_smaller {$$=$1;}
     ;
 
-    factor_smaller:  
+    factor_smaller: TOKEN_LB expr TOKEN_RB {printf("(E) \n");$$=$2;}
+    | TOKEN_SUBTRACT factor_smaller {$$=expr_create(EXPR_MUL, expr_create_integer_literal(-1), $2);} 
     | TOKEN_INTEGER_LITERAL {$$=expr_create_integer_literal(atoi($1));}
     | TOKEN_IDENT {$$=expr_create_name($1);}
     | TOKEN_IDENT TOKEN_LB args TOKEN_RB {$$= expr_create(EXPR_CALL, expr_create_name($1), $3);}
-    | subscript {$$ = $1;}
+    | subscript {$$=$1;}
     | alpha {$$=$1;}
     | TOKEN_TRUE {$$ = expr_create_boolean_literal(1);}
     | TOKEN_FALSE {$$ = expr_create_boolean_literal(0);}
