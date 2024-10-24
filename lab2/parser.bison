@@ -168,7 +168,7 @@ int num;
 
 %type <decl> program decl_list decl 
 %type <type> type type_func type_array
-%type <stmt> stmt_list stmt for
+%type <stmt> stmt_list stmt for unmatched_stmt matched_stmt
 %type <param_list> param_list param
 %type <expr> expr arg args assign term factor_bigger factor_smaller alpha expr_or_empty assign_or_empty
 
@@ -190,22 +190,34 @@ int num;
     | TOKEN_IDENT TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0);}
     | TOKEN_IDENT TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
     | TOKEN_IDENT TOKEN_COLON type_array TOKEN_SEMICOLON {$$ = decl_create($1,$3,0,0,0);}
+    | TOKEN_IDENT TOKEN_COLON type_array TOKEN_ASSIGNMENT TOKEN_CLB args TOKEN_CRB TOKEN_SEMICOLON {$$ = decl_create($1,$3,$6,0,0);}
     ;
 
     stmt_list : stmt stmt_list {$$=$1;$1->next=$2;}
     | {$$=0;}
     ;
 
-    stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
+    stmt : unmatched_stmt {$$=$1;}
+    | matched_stmt {$$=$1;}
+    ;
+
+    matched_stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
     | expr TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
     | assign TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0,0,$1,0,0,0,0);}
     | TOKEN_RETURN expr TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0, $2,0,0,0,0);}
+    | TOKEN_CLB stmt_list TOKEN_CRB {$$=stmt_create(STMT_BLOCK,0,0,0,0,$2,0,0);}
     | for {$$=$1;}
     | TOKEN_PRINT args TOKEN_SEMICOLON {$$ = stmt_create(STMT_PRINT, 0,0,$2,0,0,0,0);}
+    | TOKEN_IF TOKEN_LB expr TOKEN_RB matched_stmt TOKEN_ELSE matched_stmt {$$ = stmt_create(STMT_IF_ELSE,0,0,$3,0,$5,$7,0);}
     ;
 
-    for : TOKEN_FOR TOKEN_LB assign_or_empty TOKEN_SEMICOLON expr_or_empty  TOKEN_SEMICOLON expr_or_empty  TOKEN_RB TOKEN_CLB stmt_list TOKEN_CRB {printf("for reached\n");$$=stmt_create(STMT_FOR,0,$3,$5,$7,$10,0,0);}
-    | TOKEN_FOR TOKEN_LB assign_or_empty TOKEN_SEMICOLON expr_or_empty  TOKEN_SEMICOLON expr_or_empty  TOKEN_RB stmt {$$=stmt_create(STMT_FOR,0,$3,$5,$7,$9,0,0);}
+    unmatched_stmt: TOKEN_IF TOKEN_LB expr TOKEN_RB stmt {$$ = stmt_create(STMT_IF,0,0,$3,0,$5,0,0);}
+    | TOKEN_IF TOKEN_LB expr TOKEN_RB matched_stmt TOKEN_ELSE unmatched_stmt {$$ = stmt_create(STMT_IF_ELSE,0,0,$3,0,$5,$7,0);}
+    ;
+
+
+
+    for : TOKEN_FOR TOKEN_LB assign_or_empty TOKEN_SEMICOLON expr_or_empty  TOKEN_SEMICOLON expr_or_empty  TOKEN_RB stmt {$$=stmt_create(STMT_FOR,0,$3,$5,$7,$9,0,0);}
     ;
     assign_or_empty : assign {printf("assign or empty\n");$$=$1;}
     | {$$=0;}
