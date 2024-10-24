@@ -57,6 +57,13 @@ struct expr * expr_create_string_literal( const char *str ){
     return e;
 }
 
+struct expr * expr_create_name( const char *n ) {
+    struct expr *d = malloc(sizeof(*d));
+	d->kind = EXPR_NAME;
+    d->name = n;
+	return d;
+}
+
 struct expr * expr_create( expr_t kind, struct expr *left, struct expr *right )
 {
 	struct expr *d = malloc(sizeof(*d));
@@ -163,7 +170,7 @@ int num;
 %type <type> type type_func type_array
 %type <stmt> stmt_list stmt
 %type <param_list> param_list param
-%type <expr> expr assign term factor_bigger factor_smaller alpha expr_bool_higher expr_bool_lower expr_bool_even_lower expr_bool_literal
+%type <expr> expr arg args assign term factor_bigger factor_smaller alpha expr_bool_higher expr_bool_lower expr_bool_even_lower expr_bool_literal
 %type <name> name 
 
 
@@ -193,19 +200,22 @@ int num;
     stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
     | expr TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
     | expr_bool_higher TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
-    | assign TOKEN_SEMICOLON {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0);}
+    | assign TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0,0,$1,0,0,0,0);}
+    | TOKEN_RETURN TOKEN_IDENT TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0 ,expr_create_name($2),0,0,0,0);}
+    | TOKEN_RETURN expr TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0, $2,0,0,0,0);}
+    | TOKEN_RETURN expr_bool_higher TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0 ,$2,0,0,0,0);}
     ;
 
-    assign: name TOKEN_ASSIGNMENT expr {$$ = decl_create($1,0,$3,0,0);}
-    | name TOKEN_ASSIGNMENT expr_bool_higher {$$ = decl_create($1,0,$3,0,0);}
+    assign: name TOKEN_ASSIGNMENT expr {$$ = expr_create(EXPR_ASSIGN,  expr_create_name($1), $3);}
+    | name TOKEN_ASSIGNMENT expr_bool_higher {$$ = expr_create(EXPR_ASSIGN, expr_create_name($1), $3);}
     ;
 
-    param_list: param param_list {$$ = $1; $1->next=$2;}
+    param_list: param {$$ = $1;}
+    | param TOKEN_COMMA param_list {$$ = $1; $1->next=$3;}
     | {$$=0;}
     ;
 
     param: name TOKEN_COLON type {$$=param_list_create($1,$3, 0);}
-    | TOKEN_COMMA name TOKEN_COLON type {$$=param_list_create($2,$4, 0);}
     ;
 
     name: TOKEN_IDENT {printf("name $1=%s\n",$1);$$=$1;}
@@ -255,9 +265,19 @@ int num;
     | term {printf("E\n");$$=$1;}
     | alpha {$$=$1;}
     | expr_bool_literal {$$=$1;}
+    | TOKEN_IDENT TOKEN_LB args TOKEN_RB {$$= expr_create(EXPR_CALL, expr_create_name($1), $3);}
+    | TOKEN_IDENT TOKEN_SLB expr TOKEN_SRB {$$ = expr_create(EXPR_SUBSCRIPT,expr_create_name($1),$3);}
     ;
 
-    
+    args : arg {$$= $1;}
+    |arg TOKEN_COMMA args {$$=$1;$$= expr_create(EXPR_ARG,$1,0); $1->right =$3;}
+    | {$$=0;}
+    ; 
+
+    arg: TOKEN_IDENT {$$=expr_create(EXPR_ARG,expr_create_name($1),0);}
+    | expr{$$=expr_create(EXPR_ARG,$1,0);}
+    | expr_bool_higher{$$=expr_create(EXPR_ARG,$1,0);}
+    ;
 
     alpha: TOKEN_STRING_LITERAL {$$=expr_create_string_literal($1);}
     | TOKEN_CHAR_LITERAL {$$ = expr_create_char_literal($1[1]);printf("\n \n hello %s %c \n \n",$1,$1[1]);}
