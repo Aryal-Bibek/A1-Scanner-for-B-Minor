@@ -52,7 +52,7 @@ struct expr * expr_create_string_literal( const char *str ){
     e->kind=EXPR_STRING_LITERAL;
     char * newStr = malloc(sizeof(str)-1);
     memcpy(newStr,str+1, strlen(str)-2);
-    newStr[strlen(newStr)-1]='\0';
+    newStr[strlen(newStr)]='\0';
     e->string_literal=newStr;
     return e;
 }
@@ -168,9 +168,9 @@ int num;
 
 %type <decl> program decl_list decl 
 %type <type> type type_func type_array
-%type <stmt> stmt_list stmt
+%type <stmt> stmt_list stmt for
 %type <param_list> param_list param
-%type <expr> expr arg args assign term factor_bigger factor_smaller alpha 
+%type <expr> expr arg args assign term factor_bigger factor_smaller alpha expr_or_empty assign_or_empty
 
 
 
@@ -200,6 +200,18 @@ int num;
     | expr TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
     | assign TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0,0,$1,0,0,0,0);}
     | TOKEN_RETURN expr TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0, $2,0,0,0,0);}
+    | for {$$=$1;}
+    | TOKEN_PRINT args TOKEN_SEMICOLON {$$ = stmt_create(STMT_PRINT, 0,0,$2,0,0,0,0);}
+    ;
+
+    for : TOKEN_FOR TOKEN_LB assign_or_empty TOKEN_SEMICOLON expr_or_empty  TOKEN_SEMICOLON expr_or_empty  TOKEN_RB TOKEN_CLB stmt_list TOKEN_CRB {printf("for reached\n");$$=stmt_create(STMT_FOR,0,$3,$5,$7,$10,0,0);}
+    | TOKEN_FOR TOKEN_LB assign_or_empty TOKEN_SEMICOLON expr_or_empty  TOKEN_SEMICOLON expr_or_empty  TOKEN_RB stmt {$$=stmt_create(STMT_FOR,0,$3,$5,$7,$9,0,0);}
+    ;
+    assign_or_empty : assign {printf("assign or empty\n");$$=$1;}
+    | {$$=0;}
+    ;
+    expr_or_empty : expr {$$=$1;}
+    | {$$=0;}
     ;
 
     assign: expr TOKEN_ASSIGNMENT expr {$$ = expr_create(EXPR_ASSIGN,  $1, $3);}
@@ -239,6 +251,10 @@ int num;
     | expr TOKEN_AND term {$$ = expr_create(EXPR_AND,$1,$3);}
     | expr TOKEN_OR term {$$ = expr_create(EXPR_OR,$1,$3);}
     | TOKEN_NOT factor_bigger {$$=expr_create(EXPR_NOT,$2,0);}
+    | TOKEN_INCREMENT factor_bigger {$$=expr_create(EXPR_INCR,$2,0);}
+    | factor_bigger TOKEN_INCREMENT {$$=expr_create(EXPR_INCR,$1,0);}
+    | TOKEN_DECREMENT factor_bigger {$$=expr_create(EXPR_DECR,$2,0);}
+    | factor_bigger TOKEN_DECREMENT {$$=expr_create(EXPR_DECR,$1,0);}
     | term {printf("E\n");$$=$1;}
     ;
 
