@@ -167,10 +167,10 @@ int num;
 };
 
 %type <decl> program decl_list decl 
-%type <type> type type_func type_array
+%type <type> type type_func type_array type_array_smaller
 %type <stmt> stmt_list stmt for unmatched_stmt matched_stmt
-%type <param_list> param_list param
-%type <expr> expr arg args assign term factor_bigger factor_smaller alpha expr_or_empty assign_or_empty
+%type <param_list> param_list param empty_param_list non_empty_param_list
+%type <expr> expr arg args assign term factor_bigger factor_smaller alpha expr_or_empty assign_or_empty non_empty_args subscript can_be_empty_subscript
 
 
 
@@ -219,7 +219,7 @@ int num;
 
     for : TOKEN_FOR TOKEN_LB assign_or_empty TOKEN_SEMICOLON expr_or_empty  TOKEN_SEMICOLON expr_or_empty  TOKEN_RB stmt {$$=stmt_create(STMT_FOR,0,$3,$5,$7,$9,0,0);}
     ;
-    assign_or_empty : assign {printf("assign or empty\n");$$=$1;}
+    assign_or_empty : assign {$$=$1;}
     | {$$=0;}
     ;
     expr_or_empty : expr {$$=$1;}
@@ -228,35 +228,45 @@ int num;
 
     assign: expr TOKEN_ASSIGNMENT expr {$$ = expr_create(EXPR_ASSIGN,  $1, $3);}
     ;
+    param_list: empty_param_list {$$=$1;}
+    | non_empty_param_list {$$=$1;}
+    ;
 
-    param_list: param {$$ = $1;}
-    | param TOKEN_COMMA param_list {$$ = $1; $1->next=$3;}
-    | {$$=0;}
+    non_empty_param_list: param {$$ = $1;}
+    | param TOKEN_COMMA non_empty_param_list {$$ = $1; $1->next=$3;}
+    ;
+
+    empty_param_list : {$$=0;}
     ;
 
     param: TOKEN_IDENT TOKEN_COLON type {$$=param_list_create($1,$3, 0);}
     ;
 
-    
-    type_array: TOKEN_ARRAY TOKEN_SLB TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $4,0);}
-    | TOKEN_ARRAY TOKEN_SLB factor_smaller TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $5,0);$$->array_size=$3->literal_value;}
+
+    type_array: TOKEN_ARRAY TOKEN_SLB TOKEN_SRB type_array_smaller {$$=type_create(TYPE_ARRAY, $4,0);}
+    | TOKEN_ARRAY TOKEN_SLB factor_smaller TOKEN_SRB type_array_smaller {$$=type_create(TYPE_ARRAY, $5,0);$$->array_size=$3->literal_value;}
+    ;
+
+    type_array_smaller :  TOKEN_ARRAY TOKEN_SLB TOKEN_SRB type_array_smaller {$$=type_create(TYPE_ARRAY, $4,0);}
+    | TOKEN_ARRAY TOKEN_SLB factor_smaller TOKEN_SRB type_array_smaller {$$=type_create(TYPE_ARRAY, $5,0);$$->array_size=$3->literal_value;}
+    | type {$$=$1;}
     ;
 
     type_func : TOKEN_FUNCTION type {$$= type_create(TYPE_FUNCTION,$2,0);}
     ;
 
-    type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  0,0);}
+    type: TOKEN_VOID {$$ = type_create(TYPE_VOID,  0,0);}
     | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  0,0); printf("integer\n");}
     | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  0,0);}
     | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  0,0);}
     | TOKEN_STRING {$$ = type_create(TYPE_STRING,  0,0);}
     ;
 
-    expr : expr TOKEN_ADD term {printf("\n\nadd\n\n");$$= expr_create(EXPR_ADD,$1,$3);} 
+    expr : expr TOKEN_ADD term {$$= expr_create(EXPR_ADD,$1,$3);} 
     | expr TOKEN_SUBTRACT term {$$= expr_create(EXPR_SUB,$1,$3);} 
     | expr TOKEN_EQ term {$$= expr_create(EXPR_EQ,$1,$3);}
     | expr TOKEN_NE term {$$= expr_create(EXPR_NEQ,$1,$3);}
-    | expr TOKEN_GT term {printf("\n\n gt \n\n");$$= expr_create(EXPR_GT,$1,$3);}
+    | expr TOKEN_GT term {$$= expr_create(EXPR_GT,$1,$3);}
     | expr TOKEN_LT term {$$= expr_create(EXPR_LT,$1,$3);}
     | expr TOKEN_GE term {$$= expr_create(EXPR_GTE,$1,$3);}
     | expr TOKEN_LE term {$$= expr_create(EXPR_LTE,$1,$3);}
@@ -267,37 +277,47 @@ int num;
     | factor_bigger TOKEN_INCREMENT {$$=expr_create(EXPR_INCR,$1,0);}
     | TOKEN_DECREMENT factor_bigger {$$=expr_create(EXPR_DECR,$2,0);}
     | factor_bigger TOKEN_DECREMENT {$$=expr_create(EXPR_DECR,$1,0);}
-    | term {printf("E\n");$$=$1;}
+    | term {$$=$1;}
     ;
 
-    args : arg {$$= $1;}
-    |arg TOKEN_COMMA args {$$=$1;$$= expr_create(EXPR_ARG,$1,0); $1->right =$3;}
+    args : non_empty_args {$$=$1;}
     | {$$=0;}
+
+    non_empty_args : arg {$$= $1;}
+    |arg TOKEN_COMMA args {$$=$1;$$= expr_create(EXPR_ARG,$1,0); $1->right =$3;}
     ; 
 
     arg: expr{$$=expr_create(EXPR_ARG,$1,0);}
     ;
 
     alpha: TOKEN_STRING_LITERAL {$$=expr_create_string_literal($1);}
-    | TOKEN_CHAR_LITERAL {$$ = expr_create_char_literal($1[1]);printf("\n \n hello %s %c \n \n",$1,$1[1]);}
+    | TOKEN_CHAR_LITERAL {$$ = expr_create_char_literal($1[1]);}
 
-    term : term TOKEN_MULTIPLY factor_bigger {printf("T * F\n");$$= expr_create(EXPR_MUL,$1, $3);}
-    | term TOKEN_DIVIDE factor_bigger {printf("T / F\n");$$=expr_create(EXPR_DIV,$1, $3);}
+    term : term TOKEN_MULTIPLY factor_bigger {$$= expr_create(EXPR_MUL,$1, $3);}
+    | term TOKEN_DIVIDE factor_bigger {$$=expr_create(EXPR_DIV,$1, $3);}
     | term TOKEN_MODULO factor_bigger {$$= expr_create(EXPR_MOD, $1, $3);}
-    | factor_bigger {printf("T\n");$$=$1;}
+    | term TOKEN_EXPONENT factor_bigger {$$= expr_create(EXPR_EXP,$1,$3);}
+    | factor_bigger {$$=$1;}
     ;
     factor_bigger : TOKEN_LB expr TOKEN_RB {printf("(E) \n");$$=$2;}
-    | TOKEN_SUBTRACT factor_smaller {printf("-F\n"); $2->literal_value*=-1;$$=$2;} 
+    | TOKEN_SUBTRACT factor_smaller {$2->literal_value*=-1;$$=$2;} 
     | factor_smaller {$$=$1;}
     ;
 
-    factor_smaller:  TOKEN_INTEGER_LITERAL {printf("F $1=%s\n",$1);$$=expr_create_integer_literal(atoi($1));}
+    factor_smaller:  
+    | TOKEN_INTEGER_LITERAL {$$=expr_create_integer_literal(atoi($1));}
     | TOKEN_IDENT {$$=expr_create_name($1);}
     | TOKEN_IDENT TOKEN_LB args TOKEN_RB {$$= expr_create(EXPR_CALL, expr_create_name($1), $3);}
-    | TOKEN_IDENT TOKEN_SLB expr TOKEN_SRB {$$ = expr_create(EXPR_SUBSCRIPT,expr_create_name($1),$3);}
+    | subscript {$$ = $1;}
     | alpha {$$=$1;}
     | TOKEN_TRUE {$$ = expr_create_boolean_literal(1);}
     | TOKEN_FALSE {$$ = expr_create_boolean_literal(0);}
+    ;
+
+    subscript : TOKEN_IDENT TOKEN_SLB expr TOKEN_SRB can_be_empty_subscript {$$ = expr_create(EXPR_SUBSCRIPT,expr_create_name($1),$3);}
+    ;
+    can_be_empty_subscript: TOKEN_SLB expr TOKEN_SRB can_be_empty_subscript {$$=expr_create(EXPR_SUBSCRIPT,0,$2);}
+    | {$$=0;}
     ;
     
 %%
@@ -305,6 +325,7 @@ int num;
 /* This function is called whenever the parser fails to parse the input */
 int yyerror( char *s ) {
     printf("parse error: %s\n",s);
-    return 1;
+    exit (1);
+    //return 1;
 }
 
