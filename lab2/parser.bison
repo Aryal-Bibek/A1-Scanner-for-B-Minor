@@ -8,6 +8,7 @@
 #include "type.h"
 #include "stmt.h"
 #include "symbol.h"
+#include "param_list.h"
 
 
 extern char *yytext;
@@ -47,7 +48,31 @@ struct type * type_create( type_t kind, struct type *subtype, struct param_list 
     t->kind=kind;
     t->subtype=subtype;
     t->params=params;
+    return t;
 }
+
+struct stmt * stmt_create( stmt_t kind, struct decl *decl, struct expr *init_expr, struct expr *expr, struct expr *next_expr, struct stmt *body, struct stmt *else_body, struct stmt *next ){
+    struct stmt *s = malloc(sizeof(*s));
+    s->kind=kind;
+    s->decl=decl;
+    s->init_expr=init_expr;
+    s->expr=expr;
+    s->next_expr=next_expr;
+    s->body=body;
+    s->else_body=else_body;
+    s->next=next;
+    return s;
+}
+
+struct param_list * param_list_create( char *name, struct type *type, struct param_list *next ){
+    struct param_list *p = malloc(sizeof(*p));
+    p->name=name;
+    p->type=type;
+    p->next=next;
+    return p;
+}
+
+
 
 struct decl* parser_result;
 %}
@@ -77,7 +102,7 @@ struct decl* parser_result;
 %token TOKEN_ELSE
 %token TOKEN_FUNCTION
 %token TOKEN_RETURN
-%token TOKEN_IDENT
+%token <name> TOKEN_IDENT
 %token TOKEN_CHAR_LITERAL
 %token TOKEN_STRING_LITERAL
 %token TOKEN_EQ
@@ -100,42 +125,71 @@ struct decl* parser_result;
 %token TOKEN_ERROR
 %token TOKEN_SEMICOLON
 
+%union {
+struct decl *decl;
+struct type *type;
+struct stmt *stmt;
+struct param_list *param_list;
+char *name;
+};
+
+%type <decl> program decl_list decl 
+%type <type> type type_func
+%type <stmt> stmt_list stmt
+%type <param_list> param_list param
+%type <name> name 
+
+
+
 %%
 
 
 /* Here is the grammar: program is the start symbol. */
 
-    program : decl_list { printf("program\n");}
+    program : decl_list {parser_result=$1;printf("\nparsing tree\n");decl_print($1);printf("\ndone printing tree\n");}
     ;
 
     decl_list : decl decl_list { $$ = $1; $1->next = $2; }
-    | /* epsilon */ { $$ = 0; }
+    | { printf("epsilon decl list\n");$$ = 0; }
     ;
 
-    decl : name TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); }
-    | name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0); }
-    /*| name TOKEN_COLON TOKEN_FUNCTION type TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB*/
+    decl : name TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); printf("decl creat name is %s\n", $$->name); }
+    /*| name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0); }*/
+    | name TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
     ;
 
-    stmt_list : stmt stmt_list
-    | /*epsilon*/
+    stmt_list : stmt stmt_list {$$=$1;$1->next=$2;}
+    | {$$=0;}
     ;
-    name: TOKEN_IDENT{$$=$1;}
+
+    stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
+    ;
+
+    param_list: param param_list {$$ = $1; $1->next=$2;}
+    | {$$=0;}
+    ;
+
+    param: name TOKEN_COLON type {$$=param_list_create($1,$3, 0);}
+    | TOKEN_COMMA name TOKEN_COLON type {$$=param_list_create($2,$4, 0);}
+    ;
+
+    name: TOKEN_IDENT {printf("name $1=%s\n",$1);$$=$1;}
+    ;
+
+    type_func : TOKEN_FUNCTION type {$$= type_create(TYPE_FUNCTION,$2,0);printf("Function type\n");}
     ;
 
     type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  NULL,NULL);}
-    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL);}
+    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  NULL,NULL); printf("integer\n");}
     | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  NULL,NULL);}
     | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  NULL,NULL);}
     | TOKEN_STRING {$$ = type_create(TYPE_STRING,  NULL,NULL);}
     ;
 
-    stmt:
-    ;
+    
 
+    /*
 
-    program : expr TOKEN_SEMICOLON{printf("P\n");expr_print($1,0,0);}
-    ;
 
     expr : expr TOKEN_ADD term {printf("E + T. \n");$$= expr_create(EXPR_ADD,$1,$3);} 
     | expr TOKEN_SUBTRACT term {printf("E - T. \n");$$= expr_create(EXPR_SUB,$1,$3);} 
@@ -150,6 +204,7 @@ struct decl* parser_result;
     | TOKEN_LB expr TOKEN_RB {printf("(E) \n");} 
     | TOKEN_INTEGER_LITERAL {printf("F $1=%s\n",$1);$$=expr_create_integer_literal(atoi($1));}
     ;
+    */
 %%
 
 /* This function is called whenever the parser fails to parse the input */

@@ -40,8 +40,8 @@ if                              { return TOKEN_IF;}
 else                            { return TOKEN_ELSE;}
 function                        { return TOKEN_FUNCTION;}
 return                          { return TOKEN_RETURN;}
-(_|{LETTER})(_|{LETTER}|{DIGIT})*                                    { return TOKEN_IDENT; }
-{DIGIT}+                        { yylval = strdup(yytext); return TOKEN_INTEGER_LITERAL; }
+(_|{LETTER})(_|{LETTER}|{DIGIT})*                                    { yylval.name = strdup(yytext);return TOKEN_IDENT; }
+{DIGIT}+                        { return TOKEN_INTEGER_LITERAL; }
 \'({LETTER}|{DIGIT}|{SYMBOL}|{ESCAPE}|\"|\\\\)\'         { return TOKEN_CHAR_LITERAL;}
 \"({LETTER}|{DIGIT}|{SYMBOL}|'|\\|\\\"|\\\?){0,256}\"              { return TOKEN_STRING_LITERAL;}
 ==                              { return TOKEN_EQ;}
