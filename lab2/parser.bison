@@ -170,8 +170,7 @@ int num;
 %type <type> type type_func type_array
 %type <stmt> stmt_list stmt
 %type <param_list> param_list param
-%type <expr> expr arg args assign term factor_bigger factor_smaller alpha expr_bool_higher expr_bool_lower expr_bool_even_lower expr_bool_literal
-%type <name> name 
+%type <expr> expr arg args assign term factor_bigger factor_smaller alpha 
 
 
 
@@ -187,10 +186,10 @@ int num;
     | { printf("epsilon decl list\n");$$ = 0; }
     ;
 
-    decl : name TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); printf("decl creat name is %s\n", $$->name); }
-    | name TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0);}
-    | name TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
-    | name TOKEN_COLON type_array TOKEN_SEMICOLON {$$ = decl_create($1,$3,0,0,0);}
+    decl : TOKEN_IDENT TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); printf("decl creat name is %s\n", $$->name); }
+    | TOKEN_IDENT TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0);}
+    | TOKEN_IDENT TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
+    | TOKEN_IDENT TOKEN_COLON type_array TOKEN_SEMICOLON {$$ = decl_create($1,$3,0,0,0);}
     ;
 
     stmt_list : stmt stmt_list {$$=$1;$1->next=$2;}
@@ -199,17 +198,11 @@ int num;
 
     stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
     | expr TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
-    | expr_bool_higher TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
     | assign TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0,0,$1,0,0,0,0);}
-    | TOKEN_RETURN TOKEN_IDENT TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0 ,expr_create_name($2),0,0,0,0);}
     | TOKEN_RETURN expr TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0, $2,0,0,0,0);}
-    | TOKEN_RETURN expr_bool_higher TOKEN_SEMICOLON {$$ = stmt_create(STMT_RETURN, 0,0 ,$2,0,0,0,0);}
     ;
 
     assign: expr TOKEN_ASSIGNMENT expr {$$ = expr_create(EXPR_ASSIGN,  $1, $3);}
-    | expr TOKEN_ASSIGNMENT expr_bool_higher {$$ = expr_create(EXPR_ASSIGN, $1, $3);}
-    | expr_bool_higher TOKEN_ASSIGNMENT expr {$$ = expr_create(EXPR_ASSIGN, $1, $3);}
-    | expr_bool_higher TOKEN_ASSIGNMENT expr_bool_higher {$$ = expr_create(EXPR_ASSIGN, $1, $3);}
     ;
 
     param_list: param {$$ = $1;}
@@ -217,11 +210,9 @@ int num;
     | {$$=0;}
     ;
 
-    param: name TOKEN_COLON type {$$=param_list_create($1,$3, 0);}
+    param: TOKEN_IDENT TOKEN_COLON type {$$=param_list_create($1,$3, 0);}
     ;
 
-    name: TOKEN_IDENT {printf("name $1=%s\n",$1);$$=$1;}
-    ;
     
     type_array: TOKEN_ARRAY TOKEN_SLB TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $4,0);}
     | TOKEN_ARRAY TOKEN_SLB factor_smaller TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $5,0);$$->array_size=$3->literal_value;}
@@ -236,34 +227,18 @@ int num;
     | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  0,0);}
     | TOKEN_STRING {$$ = type_create(TYPE_STRING,  0,0);}
     ;
-    
 
-    expr_bool_higher: expr_bool_higher TOKEN_AND expr_bool_lower {$$ = expr_create(EXPR_AND,$1,$3);}
-    | expr_bool_higher TOKEN_OR expr_bool_lower {$$ = expr_create(EXPR_OR,$1,$3);}
-    | TOKEN_NOT expr_bool_higher {$$=expr_create(EXPR_NOT,$2,0);}
-    | expr_bool_lower {$$=$1;}
-    ;
-
-    expr_bool_lower: expr TOKEN_EQ term {$$= expr_create(EXPR_EQ,$1,$3);}
+    expr : expr TOKEN_ADD term {printf("\n\nadd\n\n");$$= expr_create(EXPR_ADD,$1,$3);} 
+    | expr TOKEN_SUBTRACT term {$$= expr_create(EXPR_SUB,$1,$3);} 
+    | expr TOKEN_EQ term {$$= expr_create(EXPR_EQ,$1,$3);}
     | expr TOKEN_NE term {$$= expr_create(EXPR_NEQ,$1,$3);}
     | expr TOKEN_GT term {printf("\n\n gt \n\n");$$= expr_create(EXPR_GT,$1,$3);}
     | expr TOKEN_LT term {$$= expr_create(EXPR_LT,$1,$3);}
     | expr TOKEN_GE term {$$= expr_create(EXPR_GTE,$1,$3);}
     | expr TOKEN_LE term {$$= expr_create(EXPR_LTE,$1,$3);}
-    | TOKEN_LB expr_bool_higher TOKEN_RB {$$=$2;}
-    | expr_bool_even_lower {$$=$1;}
-    ;
-
-    expr_bool_even_lower: expr_bool_literal {$$=$1;}
-    | TOKEN_LB expr_bool_lower TOKEN_RB {$$=$2;}
-    ;
-
-    expr_bool_literal: TOKEN_TRUE {$$ = expr_create_boolean_literal(1);}
-    | TOKEN_FALSE {$$ = expr_create_boolean_literal(0);}
-    ;
-
-    expr : expr TOKEN_ADD term {printf("\n\nadd\n\n");$$= expr_create(EXPR_ADD,$1,$3);} 
-    | expr TOKEN_SUBTRACT term {$$= expr_create(EXPR_SUB,$1,$3);} 
+    | expr TOKEN_AND term {$$ = expr_create(EXPR_AND,$1,$3);}
+    | expr TOKEN_OR term {$$ = expr_create(EXPR_OR,$1,$3);}
+    | TOKEN_NOT factor_bigger {$$=expr_create(EXPR_NOT,$2,0);}
     | term {printf("E\n");$$=$1;}
     ;
 
@@ -273,7 +248,6 @@ int num;
     ; 
 
     arg: expr{$$=expr_create(EXPR_ARG,$1,0);}
-    | expr_bool_higher{$$=expr_create(EXPR_ARG,$1,0);}
     ;
 
     alpha: TOKEN_STRING_LITERAL {$$=expr_create_string_literal($1);}
@@ -294,7 +268,8 @@ int num;
     | TOKEN_IDENT TOKEN_LB args TOKEN_RB {$$= expr_create(EXPR_CALL, expr_create_name($1), $3);}
     | TOKEN_IDENT TOKEN_SLB expr TOKEN_SRB {$$ = expr_create(EXPR_SUBSCRIPT,expr_create_name($1),$3);}
     | alpha {$$=$1;}
-    | expr_bool_literal {$$=$1;}
+    | TOKEN_TRUE {$$ = expr_create_boolean_literal(1);}
+    | TOKEN_FALSE {$$ = expr_create_boolean_literal(0);}
     ;
     
 %%
