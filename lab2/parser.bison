@@ -42,7 +42,6 @@ struct expr * expr_create_boolean_literal( int c ){
 }
 
 struct expr * expr_create_char_literal( char c ){
-    printf("\n\n hi 2 %c\n\n",c);
     struct expr *e = malloc(sizeof(*e));
     e->kind=EXPR_CHAR_LITERAL;
     e->literal_value=c;
@@ -51,8 +50,9 @@ struct expr * expr_create_char_literal( char c ){
 struct expr * expr_create_string_literal( const char *str ){
     struct expr *e = malloc(sizeof(*e));
     e->kind=EXPR_STRING_LITERAL;
-    char * newStr = malloc(sizeof(str)-2);
+    char * newStr = malloc(sizeof(str)-1);
     memcpy(newStr,str+1, strlen(str)-2);
+    newStr[strlen(newStr)-1]='\0';
     e->string_literal=newStr;
     return e;
 }
@@ -163,7 +163,7 @@ int num;
 %type <type> type type_func type_array
 %type <stmt> stmt_list stmt
 %type <param_list> param_list param
-%type <expr> expr term factor_bigger factor_smaller alpha
+%type <expr> expr term factor_bigger factor_smaller alpha expr_bool_higher expr_bool_lower expr_bool_even_lower expr_bool_literal
 %type <name> name 
 
 
@@ -191,6 +191,8 @@ int num;
     ;
 
     stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
+    | expr TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
+    | expr_bool_higher TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
     ;
 
     param_list: param param_list {$$ = $1; $1->next=$2;}
@@ -208,7 +210,7 @@ int num;
     | TOKEN_ARRAY TOKEN_SLB factor_smaller TOKEN_SRB type {$$=type_create(TYPE_ARRAY, $5,0);$$->array_size=$3->literal_value;}
     ;
 
-    type_func : TOKEN_FUNCTION type {$$= type_create(TYPE_FUNCTION,$2,0);printf("Function type\n");}
+    type_func : TOKEN_FUNCTION type {$$= type_create(TYPE_FUNCTION,$2,0);}
     ;
 
     type: TOKEN_VOID {printf("type = void");$$ = type_create(TYPE_VOID,  0,0);}
@@ -219,17 +221,45 @@ int num;
     ;
     
 
-    expr : expr TOKEN_ADD term {printf("E + T. \n");$$= expr_create(EXPR_ADD,$1,$3);} 
-    | expr TOKEN_SUBTRACT term {printf("E - T. \n");$$= expr_create(EXPR_SUB,$1,$3);} 
+    expr_bool_higher: expr_bool_higher TOKEN_AND expr_bool_lower {$$ = expr_create(EXPR_AND,$1,$3);}
+    | expr_bool_higher TOKEN_OR expr_bool_lower {$$ = expr_create(EXPR_OR,$1,$3);}
+    | TOKEN_NOT expr_bool_higher {$$=expr_create(EXPR_NOT,$2,0);}
+    | expr_bool_lower {$$=$1;}
+    ;
+
+    expr_bool_lower: expr TOKEN_EQ term {$$= expr_create(EXPR_EQ,$1,$3);}
+    | expr TOKEN_NE term {$$= expr_create(EXPR_NEQ,$1,$3);}
+    | expr TOKEN_GT term {printf("\n\n gt \n\n");$$= expr_create(EXPR_GT,$1,$3);}
+    | expr TOKEN_LT term {$$= expr_create(EXPR_LT,$1,$3);}
+    | expr TOKEN_GE term {$$= expr_create(EXPR_GTE,$1,$3);}
+    | expr TOKEN_LE term {$$= expr_create(EXPR_LTE,$1,$3);}
+    | TOKEN_LB expr_bool_higher TOKEN_RB {$$=$2;}
+    | expr_bool_even_lower {$$=$1;}
+    ;
+
+    expr_bool_even_lower: expr_bool_literal {$$=$1;}
+    | TOKEN_LB expr_bool_lower TOKEN_RB {$$=$2;}
+    ;
+
+    expr_bool_literal: TOKEN_TRUE {$$ = expr_create_boolean_literal(1);}
+    | TOKEN_FALSE {$$ = expr_create_boolean_literal(0);}
+    ;
+
+    expr : expr TOKEN_ADD term {printf("\n\nadd\n\n");$$= expr_create(EXPR_ADD,$1,$3);} 
+    | expr TOKEN_SUBTRACT term {$$= expr_create(EXPR_SUB,$1,$3);} 
     | term {printf("E\n");$$=$1;}
     | alpha {$$=$1;}
+    | expr_bool_literal {$$=$1;}
     ;
+
+    
 
     alpha: TOKEN_STRING_LITERAL {$$=expr_create_string_literal($1);}
     | TOKEN_CHAR_LITERAL {$$ = expr_create_char_literal($1[1]);printf("\n \n hello %s %c \n \n",$1,$1[1]);}
 
     term : term TOKEN_MULTIPLY factor_bigger {printf("T * F\n");$$= expr_create(EXPR_MUL,$1, $3);}
     | term TOKEN_DIVIDE factor_bigger {printf("T / F\n");$$=expr_create(EXPR_DIV,$1, $3);}
+    | term TOKEN_MODULO factor_bigger {$$= expr_create(EXPR_MOD, $1, $3);}
     | factor_bigger {printf("T\n");$$=$1;}
     ;
     factor_bigger : TOKEN_LB expr TOKEN_RB {printf("(E) \n");$$=$2;}
