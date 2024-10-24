@@ -163,7 +163,7 @@ int num;
 %type <type> type type_func type_array
 %type <stmt> stmt_list stmt
 %type <param_list> param_list param
-%type <expr> expr term factor_bigger factor_smaller alpha expr_bool_higher expr_bool_lower expr_bool_even_lower expr_bool_literal
+%type <expr> expr assign term factor_bigger factor_smaller alpha expr_bool_higher expr_bool_lower expr_bool_even_lower expr_bool_literal
 %type <name> name 
 
 
@@ -193,6 +193,11 @@ int num;
     stmt: decl {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0 );}
     | expr TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
     | expr_bool_higher TOKEN_SEMICOLON {$$=stmt_create(STMT_EXPR,0, 0,$1,0,0,0,0);}
+    | assign TOKEN_SEMICOLON {$$=stmt_create(STMT_DECL,$1,0,0,0,0,0,0);}
+    ;
+
+    assign: name TOKEN_ASSIGNMENT expr {$$ = decl_create($1,0,$3,0,0);}
+    | name TOKEN_ASSIGNMENT expr_bool_higher {$$ = decl_create($1,0,$3,0,0);}
     ;
 
     param_list: param param_list {$$ = $1; $1->next=$2;}
