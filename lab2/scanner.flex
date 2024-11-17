@@ -14,7 +14,7 @@ SYMBOL   [!@#$%^&*()_+.\/|:;,{}[`~\]><= ]
 ESCAPE \\[abcefntrv?0-9'"]
 
 %%
-(" "|\t|\n|\/\/.*|\/\*(.|\n)*\*\/)  /* skip whitespace */
+(" "|\t|\n|\/\/.*|\/\*(.|\\n)*\*\/)  {}/* skip whitespace */
 
  \+                             { return TOKEN_ADD;}
  \*                             { return TOKEN_MULTIPLY;}

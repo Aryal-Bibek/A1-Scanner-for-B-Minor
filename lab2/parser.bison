@@ -189,6 +189,7 @@ int num;
     decl : TOKEN_IDENT TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); printf("decl creat name is %s\n", $$->name); }
     | TOKEN_IDENT TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0);}
     | TOKEN_IDENT TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
+    | TOKEN_IDENT TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_SEMICOLON{$3->params=$5;$$ =decl_create($1,$3,0,0,0);}
     | TOKEN_IDENT TOKEN_COLON type_array TOKEN_SEMICOLON {$$ = decl_create($1,$3,0,0,0);}
     | TOKEN_IDENT TOKEN_COLON type_array TOKEN_ASSIGNMENT TOKEN_CLB args TOKEN_CRB TOKEN_SEMICOLON {$$ = decl_create($1,$3,$6,0,0);}
     ;
