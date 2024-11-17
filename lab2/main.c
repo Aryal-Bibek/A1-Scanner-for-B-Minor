@@ -35,6 +35,10 @@ int main(int argc, char *argv[])
 	{
 		run_parse(filename);
 	}
+    else if(strcmp(option, "-resolve") == 0)
+    {
+        run_resolve(filename);
+    }
     else
     {
         fprintf(stderr, "Unknown option: %s\n", option);
@@ -43,6 +47,18 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+void run_resolve(const char *filename)
+{
+	FILE* file = fopen(filename, "r");
+	if (file != NULL){
+		yyin=file;
+		int i=0;
+		i=yyparse();
+		resolve_tree();
+	}
+}
+
 
 void run_parse(const char *filename)
 {

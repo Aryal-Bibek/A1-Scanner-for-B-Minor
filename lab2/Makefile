@@ -1,7 +1,7 @@
 # The top level rule indicates how to link everything together into bminor
 # Add a rule for each file that needs to be compiled.
 
-bminor: token.h print.o main.o scanner.o helper.o parser.o hash_table.o scope.o
+bminor: token.h print.o main.o scanner.o helper.o parser.o hash_table.o scope.o resolve.o symbol.o
 	gcc $^ -o bminor -lm
 
 # This pattern indicates that any .o file depends
