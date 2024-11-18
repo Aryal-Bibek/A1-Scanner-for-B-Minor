@@ -1,0 +1,35 @@
+integer
+decl creat name is x
+integer
+integer
+epsilon decl list
+
+parsing tree
+x: integer
+main: function void () = {
+    for (; ; ) {
+        x: integer = 5;
+        {
+            x: integer = 6;
+            print x;
+        }
+    }
+    if (x > 5) {
+        x++;
+    }
+}
+funct2: function void () = {
+    {
+        print "hello";
+    }
+    if (x > 5) if (x < 5) {
+        x++;
+    }
+    else {
+        x++;
+        x--;
+    }
+}
+
+done printing tree
+yyparse return 0

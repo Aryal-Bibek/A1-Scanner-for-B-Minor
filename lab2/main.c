@@ -11,10 +11,12 @@ extern int yylex();  // Scans text, returns 0 on EOF.
 extern int yylineno; // Line number of the last scanned text.
 extern char *yytext; // Actual text scanned
 extern int yyparse();
-
+extern struct decl* parser_result;
 //void run_scan(const char *filename);
 
 void run_parse(const char *filename);
+void run_resolve(const char *filename);
+void run_typecheck(const char *filename);
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +41,10 @@ int main(int argc, char *argv[])
     {
         run_resolve(filename);
     }
+    else if(strcmp(option, "-typecheck") == 0)
+    {
+        run_typecheck(filename);
+    }
     else
     {
         fprintf(stderr, "Unknown option: %s\n", option);
@@ -59,6 +65,21 @@ void run_resolve(const char *filename)
 	}
 }
 
+void run_typecheck(const char *filename)
+{
+	FILE* file = fopen(filename, "r");
+	if (file != NULL){
+		yyin=file;
+        if(!yyparse()){
+            if(parser_result != NULL){
+                decl_typecheck(parser_result);
+            }
+        }
+	}else{
+        printf("parse failed");
+        return 1;
+    }
+}
 
 void run_parse(const char *filename)
 {

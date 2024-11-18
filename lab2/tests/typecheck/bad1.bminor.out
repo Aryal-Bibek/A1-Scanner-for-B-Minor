@@ -1,0 +1,10 @@
+Error: type mismatch for variable integer
+epsilon decl list
+
+parsing tree
+x: integer = 'c';
+
+done printing tree
+curr scope on enter: 1
+name : x entered scope : 1
+curr scope on exit: 0

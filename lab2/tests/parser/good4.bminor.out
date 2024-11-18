@@ -1,0 +1,17 @@
+integer
+integer
+(E) 
+(E) 
+epsilon decl list
+
+parsing tree
+main: function void () = {
+    x: integer = 5;
+    y: integer = 4;
+    if (!((4 * x)^5 + 4 - 4 >= 1)) {
+        x = 6;
+    }
+}
+
+done printing tree
+yyparse return 0

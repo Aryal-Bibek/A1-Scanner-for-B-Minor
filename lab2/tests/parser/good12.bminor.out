@@ -1,0 +1,16 @@
+integer
+integer
+integer
+epsilon decl list
+
+parsing tree
+arr: array [5] integer = 0, 1, 2, 3, 4;
+main: function void () = {
+    x: integer = 5;
+    y: integer = 3;
+    arr[x - y] = 4;
+    arr[y + x * 3] = arr[2 + x^2 - 1];
+}
+
+done printing tree
+yyparse return 0

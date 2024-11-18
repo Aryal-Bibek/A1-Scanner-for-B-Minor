@@ -1,0 +1,22 @@
+integer
+integer
+decl creat name is y
+integer
+decl creat name is x
+integer
+decl creat name is q
+epsilon decl list
+
+parsing tree
+x: integer = 5;
+y: integer
+z: char = 'A';
+fxn: function void () = {
+    x: integer
+    y: integer = 16;
+    w: boolean = true;
+    q: boolean
+}
+
+done printing tree
+yyparse return 0

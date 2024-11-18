@@ -1,0 +1,16 @@
+epsilon decl list
+
+parsing tree
+main: function void () = {
+    if (10 < 20) print "hi";
+    else print "hello";
+    if (10 < 20) {
+        print "hi";
+    }
+    else {
+        print "hello";
+    }
+}
+
+done printing tree
+yyparse return 0

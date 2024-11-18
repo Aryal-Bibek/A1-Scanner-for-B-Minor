@@ -1,0 +1,26 @@
+integer
+decl creat name is x
+integer
+decl creat name is y
+integer
+decl creat name is z
+integer
+integer
+epsilon decl list
+
+parsing tree
+x: integer
+y: integer
+z: integer
+arr: array [5] array [5] integer
+str: string = "hello world";
+fxn: function integer () = {
+    arr[3] = 5;
+    x = arr[2];
+    x++;
+    return z;
+    c: char = str[0];
+}
+
+done printing tree
+yyparse return 0

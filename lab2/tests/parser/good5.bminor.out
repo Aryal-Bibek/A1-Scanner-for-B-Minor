@@ -1,0 +1,15 @@
+integer
+integer
+(E) 
+(E) 
+epsilon decl list
+
+parsing tree
+main: function void () = {
+    x: integer = 5;
+    y: integer = 4;
+    z: boolean = (((true || -1 * (4 * x)^5) + (4 - 4) >= 16) - 6 * 3 + x && y^2) == 16;
+}
+
+done printing tree
+yyparse return 0

@@ -102,7 +102,29 @@ struct param_list * param_list_create( char *name, struct type *type, struct par
     p->next=next;
     return p;
 }
+struct param_list * param_list_copy(struct param_list *l) {
 
+  if (l == NULL) return NULL;
+
+  struct param_list *head = param_list_create(l->name, type_copy(l->type), NULL);
+  struct param_list *curr = head;
+
+  while (l->next != NULL) {
+    l = l->next;
+    curr->next = param_list_create(l->name, type_copy(l->type), NULL);
+    curr = curr->next;
+  }
+
+  return head;
+}
+void param_list_delete(struct param_list *l) {
+
+  if (l == NULL) return;
+
+  type_delete(l->type);
+  param_list_delete(l->next);
+  free(l);
+}
 
 
 struct decl* parser_result;

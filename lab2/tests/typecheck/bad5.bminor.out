@@ -1,0 +1,22 @@
+integer
+epsilon decl list
+
+parsing tree
+y: integer = 10;
+main: function void () = {
+    if (y > 5 && 'a' || true) {
+        print "ok";
+    }
+}
+
+done printing tree
+curr scope on enter: 1
+name : y entered scope : 1
+name : main entered scope : 1
+curr scope on enter: 2
+curr scope on enter: 3
+curr scope on enter: 4
+curr scope on exit: 3
+curr scope on exit: 2
+curr scope on exit: 1
+curr scope on exit: 0

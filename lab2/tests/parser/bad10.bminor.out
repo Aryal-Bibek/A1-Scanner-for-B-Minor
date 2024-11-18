@@ -1,0 +1,3 @@
+integer
+decl creat name is x
+parse error: syntax error
