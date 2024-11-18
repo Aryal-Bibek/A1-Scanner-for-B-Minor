@@ -12,6 +12,7 @@ extern int yylineno; // Line number of the last scanned text.
 extern char *yytext; // Actual text scanned
 extern int yyparse();
 extern struct decl* parser_result;
+extern int isThereError;
 //void run_scan(const char *filename);
 
 void run_parse(const char *filename);
@@ -61,7 +62,9 @@ void run_resolve(const char *filename)
 		yyin=file;
 		int i=0;
 		i=yyparse();
-		resolve_tree();
+		if (resolve_tree() != 0){
+            printf("name resolution failed\n");
+        }
 	}
 }
 
@@ -72,7 +75,15 @@ void run_typecheck(const char *filename)
 		yyin=file;
         if(!yyparse()){
             if(parser_result != NULL){
-                decl_typecheck(parser_result);
+                if (resolve_tree() == 0){
+                
+                    decl_typecheck(parser_result);
+                    if (isThereError == 1){
+                        exit(1);
+                    }
+                } else {
+                    printf("name resolution failed\n");
+                }
             }
         }
 	}else{

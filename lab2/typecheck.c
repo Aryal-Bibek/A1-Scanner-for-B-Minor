@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "typecheck.h"
 
+#define DEBUG (0)
+
+int isThereError=0;
+
 int type_equals( struct type *a, struct type *b ){
   if( a->kind == b->kind ) {
   if( is_atomic(a) && is_atomic(b) ){
@@ -45,9 +49,12 @@ void type_delete( struct type *t ){
 
 struct type * expr_typecheck( struct expr *e ){
   if(!e) return 0;
+  if DEBUG printf("got in expr typecheck\n");
   struct type *lt = expr_typecheck(e->left);
+  if DEBUG printf("got past left \n");
   struct type *rt = expr_typecheck(e->right);
-  struct type *result;
+  if DEBUG printf("got past right %d \n", e->kind);
+  struct type *result = NULL;
   switch(e->kind) {
     case EXPR_INTEGER_LITERAL:
       result = type_create(TYPE_INTEGER,0,0);
@@ -62,21 +69,41 @@ struct type * expr_typecheck( struct expr *e ){
       result = type_create(TYPE_BOOLEAN, 0, 0);
       break;
     case EXPR_SUB:
+      if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
+        fprintf(stderr, "error: cannot substract");
+        isThereError=1;
+      }
+      result = type_create(TYPE_INTEGER,0,0);
+      break;
     case EXPR_MUL:
+      if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
+        fprintf(stderr, "error: cannot multiply");
+        isThereError=1;
+      }
+      result = type_create(TYPE_INTEGER,0,0);
+      break;
     case EXPR_DIV:
+      if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
+        fprintf(stderr, "error: cannot divide");
+        isThereError=1;
+      }
+      result = type_create(TYPE_INTEGER,0,0);
+      break;
     case EXPR_MOD:
+      if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
+        fprintf(stderr, "error: cannot add");
+        isThereError=1;
+      }
+      result = type_create(TYPE_INTEGER,0,0);
+      break;
     case EXPR_ADD:
       if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
         fprintf(stderr, "error: cannot add");
+        isThereError=1;
       }
       result = type_create(TYPE_INTEGER,0,0);
       break;
     case EXPR_LT:
-    case EXPR_GT:
-    case EXPR_LTE:
-    case EXPR_GTE:
-    case EXPR_EQ:
-    case EXPR_NEQ:
       if(!type_equals(lt,rt)) {
         fprintf(stderr, "error: operands must be of the same type for comparison in %s\n", 
           e->kind == EXPR_LT ? "<" :
@@ -84,6 +111,7 @@ struct type * expr_typecheck( struct expr *e ){
           e->kind == EXPR_LTE ? "<=" :
           e->kind == EXPR_GTE ? ">=" :
           e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
       }
       if(lt->kind==TYPE_VOID || lt->kind==TYPE_ARRAY || lt->kind==TYPE_FUNCTION) {
         fprintf(stderr, "error: unsupported types for comparison in %s\n", 
@@ -92,61 +120,198 @@ struct type * expr_typecheck( struct expr *e ){
           e->kind == EXPR_LTE ? "<=" :
           e->kind == EXPR_GTE ? ">=" :
           e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      result = type_create(TYPE_BOOLEAN,0,0);
+      break;
+    case EXPR_GT:
+      if(!type_equals(lt,rt)) {
+        fprintf(stderr, "error: operands must be of the same type for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+          isThereError=1;
+      }
+      if(lt->kind==TYPE_VOID || lt->kind==TYPE_ARRAY || lt->kind==TYPE_FUNCTION) {
+        fprintf(stderr, "error: unsupported types for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+          isThereError=1;
+      }
+      result = type_create(TYPE_BOOLEAN,0,0);
+      break;
+    case EXPR_LTE:
+      if(!type_equals(lt,rt)) {
+        fprintf(stderr, "error: operands must be of the same type for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      if(lt->kind==TYPE_VOID || lt->kind==TYPE_ARRAY || lt->kind==TYPE_FUNCTION) {
+        fprintf(stderr, "error: unsupported types for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      result = type_create(TYPE_BOOLEAN,0,0);
+      break;
+    case EXPR_GTE:
+      if(!type_equals(lt,rt)) {
+        fprintf(stderr, "error: operands must be of the same type for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      if(lt->kind==TYPE_VOID || lt->kind==TYPE_ARRAY || lt->kind==TYPE_FUNCTION) {
+        fprintf(stderr, "error: unsupported types for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      result = type_create(TYPE_BOOLEAN,0,0);
+      break;
+    case EXPR_EQ:
+      if(!type_equals(lt,rt)) {
+        fprintf(stderr, "error: operands must be of the same type for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      if(lt->kind==TYPE_VOID || lt->kind==TYPE_ARRAY || lt->kind==TYPE_FUNCTION) {
+        fprintf(stderr, "error: unsupported types for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      result = type_create(TYPE_BOOLEAN,0,0);
+      break;
+    case EXPR_NEQ:
+      if(!type_equals(lt,rt)) {
+        fprintf(stderr, "error: operands must be of the same type for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
+      }
+      if(lt->kind==TYPE_VOID || lt->kind==TYPE_ARRAY || lt->kind==TYPE_FUNCTION) {
+        fprintf(stderr, "error: unsupported types for comparison in %s\n", 
+          e->kind == EXPR_LT ? "<" :
+          e->kind == EXPR_GT ? ">" :
+          e->kind == EXPR_LTE ? "<=" :
+          e->kind == EXPR_GTE ? ">=" :
+          e->kind == EXPR_EQ ? "==" : "!=");
+        isThereError=1;
       }
       result = type_create(TYPE_BOOLEAN,0,0);
       break;
     case EXPR_INCR:
+      if (lt->kind != TYPE_INTEGER) {
+        fprintf(stderr, "error: operand must be an integer for operation %s\n", e->kind == EXPR_INCR ? "increment" : "decrement");
+        isThereError=1;
+      }
+      result = type_copy(lt);
+      break;
     case EXPR_DECR:
       if (lt->kind != TYPE_INTEGER) {
         fprintf(stderr, "error: operand must be an integer for operation %s\n", e->kind == EXPR_INCR ? "increment" : "decrement");
+        isThereError=1;
       }
       result = type_copy(lt);
       break;
     case EXPR_AND:
+      if (lt->kind != TYPE_BOOLEAN || rt->kind != TYPE_BOOLEAN) {
+        fprintf(stderr, "Error: operands must be boolean for operation %s\n", e->kind == EXPR_AND ? "AND" : "OR");
+        isThereError=1;
+      }
+      result = type_create(TYPE_BOOLEAN, 0, 0);
+      break;  
     case EXPR_OR:
       if (lt->kind != TYPE_BOOLEAN || rt->kind != TYPE_BOOLEAN) {
         fprintf(stderr, "Error: operands must be boolean for operation %s\n", e->kind == EXPR_AND ? "AND" : "OR");
+        isThereError=1;
       }
       result = type_create(TYPE_BOOLEAN, 0, 0);
       break;  
     case EXPR_NOT:
       if (lt->kind != TYPE_BOOLEAN) {
           fprintf(stderr, "Error: operand must be boolean for NOT operation\n");
+        isThereError=1;
       }
       result = type_create(TYPE_BOOLEAN, 0, 0); 
       break; 
     case EXPR_ASSIGN:
       if (lt->kind != TYPE_INTEGER && lt->kind != TYPE_BOOLEAN && lt->kind != TYPE_STRING && lt->kind != TYPE_CHARACTER) {
           fprintf(stderr, "Error: left-hand side must be a variable (lvalue) for assignment\n");
+          isThereError=1;
       }
       if (lt->kind != rt->kind) {
           fprintf(stderr, "Error: mismatched types in assignment");
+          isThereError=1;
       }
       result = type_copy(lt);
       break;
     case EXPR_NAME:
+      if DEBUG printf("expr name \n");
       result = type_copy(e->symbol->type);
+      if DEBUG printf("expr name survived\n");
       break;
     case EXPR_CALL:
-      result = type_copy(e->symbol->type); 
+      //TODO: fix call - should check if arguments match parameters of function
+      if DEBUG printf("func called\n");
+      result = type_copy(lt);
+      if DEBUG printf("func called survived\n"); 
+      break;
+    case EXPR_ARG:
+      result = type_copy(lt); 
       break;
     case EXPR_ARR:
       if (lt->kind != TYPE_INTEGER) {
           fprintf(stderr, "Error: array size must be an integer\n");
+          isThereError=1;
       }
-      result = type_create(TYPE_ARRAY, 0, lt); 
+      result = type_create(TYPE_ARRAY, lt, 0); 
       break;
     case EXPR_SUBSCRIPT:
       if (lt->kind != TYPE_ARRAY) {
           fprintf(stderr, "Error: left-hand side must be an array for subscript\n");
+          isThereError=1;
       }
-      if (rt->kind != TYPE_INTEGER) {
+      if (rt->kind != TYPE_INTEGER && !(rt->kind == TYPE_FUNCTION && rt->subtype->kind == TYPE_INTEGER)) {
           fprintf(stderr, "Error: index must be an integer for subscript\n");
+          isThereError=1;
       }
+      if DEBUG printf("subscripting\n");
       result = type_copy(lt->subtype); 
+      if DEBUG printf("subscripting survived\n");
       break;
     default:
       fprintf(stderr, "Error: unsupported expression type %d\n", e->kind);
+      isThereError=1;
       result = NULL;
       break;
   }
@@ -156,19 +321,31 @@ struct type * expr_typecheck( struct expr *e ){
 }
 
 void decl_typecheck( struct decl *d ){
+  if DEBUG printf("I am in decl typecheck\n");
+  if (!d){
+    if DEBUG printf("decl is null\n");
+    return ;
+  } else {
+    if DEBUG printf("%s\n", d->name);
+  }
   if(d->value) {
+    if DEBUG printf("got in if \n");
     struct type *t;
     t = expr_typecheck(d->value);
+    if DEBUG printf("got past expr typecheck\n");
     if(!type_equals(t,d->symbol->type)) {
       fprintf(stderr, "Error: type mismatch for variable ");
+      isThereError=1;
     }
   }
   if(d->code) {
     stmt_typecheck(d->code);
   }
+  decl_typecheck(d->next);
 }
 
 void stmt_typecheck( struct stmt *s ){
+  if (!s) return;
   struct type *t;
   switch(s->kind) {
     case STMT_EXPR:
@@ -179,6 +356,7 @@ void stmt_typecheck( struct stmt *s ){
       t = expr_typecheck(s->expr);
       if(t->kind!=TYPE_BOOLEAN) {
         fprintf(stderr, "error: condition in if-else statement must be of boolean type");
+        isThereError=1;
       }
       type_delete(t);
       stmt_typecheck(s->body);
@@ -191,6 +369,7 @@ void stmt_typecheck( struct stmt *s ){
       t = expr_typecheck(s->expr);
       if (t->kind != TYPE_BOOLEAN) {
         fprintf(stderr, "error: condition in if statement must be of boolean type,");
+        isThereError=1;
       }
       type_delete(t);
       stmt_typecheck(s->body);
@@ -203,6 +382,7 @@ void stmt_typecheck( struct stmt *s ){
       t = expr_typecheck(s->expr);
       if (t->kind != TYPE_BOOLEAN) {
         fprintf(stderr, "error: condition in for loop must be of boolean type,");
+        isThereError=1;
       }
       type_delete(t);
       if (s->next_expr != NULL) {
@@ -213,31 +393,36 @@ void stmt_typecheck( struct stmt *s ){
       break;
     case STMT_PRINT:
       t = expr_typecheck(s->expr);
+      if DEBUG ("got past print expr\n");
       if (t->kind == TYPE_VOID) {
         fprintf(stderr, "error: cannot print expression of type void\n");
+        isThereError=1;
       }
+      
       type_delete(t);
       break;
     case STMT_RETURN:
       if (s->expr != NULL) {
           t = expr_typecheck(s->expr);
-          if (t->kind != s->decl->type->kind) {
+          if (t->kind != s->decl->type->subtype->kind) {
             fprintf(stderr, "error: return type mismatch: ");
+            isThereError=1;
           }
           type_delete(t);
       } else {
-          if (s->decl->type->kind != TYPE_VOID) {
+          if (s->decl->type->subtype->kind != TYPE_VOID) {
             fprintf(stderr, "error: return value expected, but none provided\n");
+            isThereError=1;
           }
       }
       break;
     case STMT_BLOCK:
-      for (struct stmt *stmt = s->body; stmt != NULL; stmt = stmt->next) {
-          stmt_typecheck(stmt);
-      }
+      stmt_typecheck(s->body);
       break;
     default:
       fprintf(stderr, "error: Unknown statement kind '%d'\n", s->kind);
+      isThereError=1;
       break;
   }
+  stmt_typecheck(s->next);
 }

@@ -10,10 +10,13 @@
 
 extern struct decl *parser_result;
 
-void resolve_tree(){
+struct decl* calling_func;
+
+int resolve_tree(){
     scope_enter();
     decl_resolve(parser_result);
     scope_exit();
+    return 0;
 }
 
 void decl_resolve(struct decl *d){
@@ -30,6 +33,7 @@ void decl_resolve(struct decl *d){
         scope_enter(); //entering param scope
         param_list_resolve(d->type->params);
         scope_enter(); //entering local scope
+        calling_func = d;
         stmt_resolve(d->code);
         scope_exit(); // exiting local scope
         scope_exit(); //exiting param scope
@@ -37,6 +41,7 @@ void decl_resolve(struct decl *d){
 
     decl_resolve(d->next);
 }
+
 
 void stmt_resolve(struct stmt *s){
     if (!s) return;
@@ -71,13 +76,16 @@ void stmt_resolve(struct stmt *s){
             scope_exit();
             break;
         case STMT_RETURN:
+            s->decl = calling_func;
             expr_resolve(s->expr);
             break;
         case STMT_PRINT:
             expr_resolve(s->expr);
             break;
         case STMT_BLOCK:
+            scope_enter();
             stmt_resolve(s->body);
+            scope_exit();
             break;
         default:
             break;
@@ -89,6 +97,10 @@ void expr_resolve(struct expr *e){
     if(!e) return;
     if( e->kind==EXPR_NAME ) {
         e->symbol = scope_lookup(e->name);
+        if (!e->symbol){
+            printf("unknown name\n");
+            exit(1);
+        }
     } else {
         expr_resolve( e->left );
         expr_resolve( e->right );
