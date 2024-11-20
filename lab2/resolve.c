@@ -8,9 +8,13 @@
 #include "scope.h"
 #include "symbol.h"
 
+#define DEBUG (1)
+
 extern struct decl *parser_result;
 
 struct decl* calling_func;
+
+extern int isThereError;
 
 int resolve_tree(){
     scope_enter();
@@ -23,8 +27,26 @@ void decl_resolve(struct decl *d){
     if(!d) return;
 
     symbol_t kind = scope_level() > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
+    if DEBUG printf("declaration of %s type %d\n", d->name, d->type->kind);
+    if (!d->type){
+        if DEBUG printf("no type %s\n", d->name);
+    }
+
+    if (d->type->kind == TYPE_FUNCTION){
+        if DEBUG printf("yeah this is a function declaration %s\n", d-> name);
+        struct symbol *same_name_func = scope_lookup(d->name);
+        if (same_name_func){
+            if DEBUG printf("fuction prototype already declared %s\n", d-> name);
+            if (type_equals(d->type, same_name_func->type)==0){
+                printf("function declaration differs from prototype\n");
+                isThereError=1;
+            }
+        }
+    }
 
     d->symbol = symbol_create(kind, d->type, d->name);
+
+    
 
     expr_resolve(d->value);
     scope_bind(d->name, d->symbol);
