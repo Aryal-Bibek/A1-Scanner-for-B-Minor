@@ -8,7 +8,7 @@
 #include "scope.h"
 #include "symbol.h"
 
-#define DEBUG (1)
+#define DEBUG (0)
 
 extern struct decl *parser_result;
 

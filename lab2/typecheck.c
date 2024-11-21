@@ -70,35 +70,35 @@ struct type * expr_typecheck( struct expr *e ){
       break;
     case EXPR_SUB:
       if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
-        fprintf(stderr, "error: cannot substract");
+        fprintf(stderr, "error: cannot substract\n");
         isThereError=1;
       }
       result = type_create(TYPE_INTEGER,0,0);
       break;
     case EXPR_MUL:
       if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
-        fprintf(stderr, "error: cannot multiply");
+        fprintf(stderr, "error: cannot multiply\n");
         isThereError=1;
       }
       result = type_create(TYPE_INTEGER,0,0);
       break;
     case EXPR_DIV:
       if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
-        fprintf(stderr, "error: cannot divide");
+        fprintf(stderr, "error: cannot divide\n");
         isThereError=1;
       }
       result = type_create(TYPE_INTEGER,0,0);
       break;
     case EXPR_MOD:
       if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
-        fprintf(stderr, "error: cannot add");
+        fprintf(stderr, "error: cannot add\n");
         isThereError=1;
       }
       result = type_create(TYPE_INTEGER,0,0);
       break;
     case EXPR_ADD:
       if( lt->kind!=TYPE_INTEGER || rt->kind!=TYPE_INTEGER ) {
-        fprintf(stderr, "error: cannot add");
+        fprintf(stderr, "error: cannot add\n");
         isThereError=1;
       }
       result = type_create(TYPE_INTEGER,0,0);
@@ -265,13 +265,17 @@ struct type * expr_typecheck( struct expr *e ){
       result = type_create(TYPE_BOOLEAN, 0, 0); 
       break; 
     case EXPR_ASSIGN:
-      if (lt->kind != TYPE_INTEGER && lt->kind != TYPE_BOOLEAN && lt->kind != TYPE_STRING && lt->kind != TYPE_CHARACTER) {
-          fprintf(stderr, "Error: left-hand side must be a variable (lvalue) for assignment\n");
+      if (lt->kind != TYPE_INTEGER && lt->kind != TYPE_BOOLEAN && lt->kind != TYPE_STRING && lt->kind != TYPE_CHARACTER && lt->kind != TYPE_ARRAY) {
+          fprintf(stderr, "Error: left-hand side must be a variable (lvalue) for assignment %d\n", lt->kind);
           isThereError=1;
       }
-      if (lt->kind != rt->kind) {
-          fprintf(stderr, "Error: mismatched types in assignment");
-          isThereError=1;
+      struct type * type_of_right_side =rt;
+      if (rt->kind  == TYPE_FUNCTION){
+        type_of_right_side = rt->subtype;
+      } 
+      if (!type_equals(lt, type_of_right_side)) {
+        fprintf(stderr, "Error: mismatched types in assignment\n");
+        isThereError=1;
       }
       result = type_copy(lt);
       break;
@@ -283,7 +287,7 @@ struct type * expr_typecheck( struct expr *e ){
     case EXPR_CALL:
       //TODO: fix call - should check if arguments match parameters of function
       if DEBUG printf("func called\n");
-      result = type_copy(lt);
+      result = type_copy(lt->subtype);
       if DEBUG printf("func called survived\n"); 
       break;
     case EXPR_ARG:
@@ -330,12 +334,24 @@ void decl_typecheck( struct decl *d ){
   }
   if(d->value) {
     if DEBUG printf("got in if \n");
-    struct type *t;
-    t = expr_typecheck(d->value);
+    
     if DEBUG printf("got past expr typecheck\n");
-    if(!type_equals(t,d->symbol->type)) {
-      fprintf(stderr, "Error: type mismatch for variable ");
-      isThereError=1;
+    if (d->type->kind == TYPE_ARRAY){
+      struct expr* assigned_value = d->value;
+      while (assigned_value){
+        if (!type_equals(expr_typecheck(assigned_value), d->type->subtype)){
+          fprintf(stderr, "Error: type mismatch for variables of array\n");
+          isThereError=1;
+        }
+        assigned_value  = assigned_value->right;
+      }
+    } else {
+      struct type *t;
+      t = expr_typecheck(d->value);
+      if(!type_equals(t,d->symbol->type)) {
+        fprintf(stderr, "Error: type mismatch for variable %d \n", t->kind);
+        isThereError=1;
+      }
     }
   }
   if(d->code) {
@@ -355,7 +371,7 @@ void stmt_typecheck( struct stmt *s ){
     case STMT_IF_ELSE:
       t = expr_typecheck(s->expr);
       if(t->kind!=TYPE_BOOLEAN) {
-        fprintf(stderr, "error: condition in if-else statement must be of boolean type");
+        fprintf(stderr, "error: condition in if-else statement must be of boolean type\n");
         isThereError=1;
       }
       type_delete(t);
@@ -368,7 +384,7 @@ void stmt_typecheck( struct stmt *s ){
     case STMT_IF:
       t = expr_typecheck(s->expr);
       if (t->kind != TYPE_BOOLEAN) {
-        fprintf(stderr, "error: condition in if statement must be of boolean type,");
+        fprintf(stderr, "error: condition in if statement must be of boolean type,\n");
         isThereError=1;
       }
       type_delete(t);
@@ -381,7 +397,7 @@ void stmt_typecheck( struct stmt *s ){
       }
       t = expr_typecheck(s->expr);
       if (t->kind != TYPE_BOOLEAN) {
-        fprintf(stderr, "error: condition in for loop must be of boolean type,");
+        fprintf(stderr, "error: condition in for loop must be of boolean type,\n");
         isThereError=1;
       }
       type_delete(t);
@@ -405,7 +421,7 @@ void stmt_typecheck( struct stmt *s ){
       if (s->expr != NULL) {
           t = expr_typecheck(s->expr);
           if (t->kind != s->decl->type->subtype->kind) {
-            fprintf(stderr, "error: return type mismatch: ");
+            fprintf(stderr, "error: return type mismatch: \n");
             isThereError=1;
           }
           type_delete(t);
