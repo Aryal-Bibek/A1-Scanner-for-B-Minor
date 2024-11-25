@@ -339,6 +339,11 @@ void decl_typecheck( struct decl *d ){
     if (d->type->kind == TYPE_ARRAY){
       struct expr* assigned_value = d->value;
       while (assigned_value){
+        if (d->symbol->kind == 2 && (assigned_value->left->left && (assigned_value->left->left->kind <6 || assigned_value->left->left->kind >9))){
+          if DEBUG printf("assigned_value->->left->left : %d\n",assigned_value->left->left->kind);
+          fprintf(stderr, "Error: global variable must be assigned only const values\n");
+          isThereError=1;
+        }
         if (!type_equals(expr_typecheck(assigned_value), d->type->subtype)){
           fprintf(stderr, "Error: type mismatch for variables of array\n");
           isThereError=1;
@@ -348,6 +353,14 @@ void decl_typecheck( struct decl *d ){
     } else {
       struct type *t;
       t = expr_typecheck(d->value);
+      if (d->type != TYPE_FUNCTION && d->symbol->kind == 2 && (d->value->kind <6 || d->value->kind >9)){
+        if DEBUG printf("d->name : %s\n", d->name);
+        fprintf(stderr, "Error: global variable must be assigned const value\n");
+        
+        isThereError=1;
+      } else {
+        if DEBUG printf("d->value->kind : %d\n", d->value->kind);
+      }
       if(!type_equals(t,d->symbol->type)) {
         fprintf(stderr, "Error: type mismatch for variable %d \n", t->kind);
         isThereError=1;
@@ -409,7 +422,7 @@ void stmt_typecheck( struct stmt *s ){
       break;
     case STMT_PRINT:
       t = expr_typecheck(s->expr);
-      if DEBUG ("got past print expr\n");
+      if DEBUG printf("got past print expr\n");
       if (t->kind == TYPE_VOID) {
         fprintf(stderr, "error: cannot print expression of type void\n");
         isThereError=1;

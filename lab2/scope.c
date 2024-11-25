@@ -4,6 +4,8 @@
 #include "hash_table.h"
 #include "symbol.h"
 
+# define DEBUG (0)
+
 struct scope_stack_node {
     struct hash_table *current_scope;
     struct scope_stack_node *prev;
@@ -16,14 +18,14 @@ void scope_enter(){
     new_scope->current_scope= hash_table_create(0, NULL);
     new_scope->prev = head;
     head=new_scope;
-    printf("curr scope on enter: %d\n",scope_level());
+    if DEBUG printf("curr scope on enter: %d\n",scope_level());
 }
 void scope_exit(){
     struct scope_stack_node *tmp =head->prev;
     hash_table_delete(head->current_scope);
     free(head);
     head=tmp;
-    printf("curr scope on exit: %d\n",scope_level());
+    if DEBUG printf("curr scope on exit: %d\n",scope_level());
 }
 int scope_level(){
     int level=0;
@@ -35,7 +37,7 @@ int scope_level(){
     return level;
 }
 void scope_bind(const char *name, struct symbol *sym){
-    printf("name : %s entered scope : %d\n", name, scope_level());
+    if DEBUG printf("name : %s entered scope : %d\n", name, scope_level());
     hash_table_insert(head->current_scope,name,sym);
 }
 struct symbol *scope_lookup(const char *name){
@@ -45,7 +47,7 @@ struct symbol *scope_lookup(const char *name){
         ret = hash_table_lookup(curr->current_scope,name);
         curr = curr->prev;
     }
-    //printf("scope lookup name : %d\n", ret->name);
+    if DEBUG printf("scope lookup name : %d\n", ret->name);
     return ret;
 }
 struct symbol *scope_lookup_current(const char *name){

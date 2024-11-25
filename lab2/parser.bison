@@ -205,10 +205,10 @@ int num;
     ;
 
     decl_list : decl decl_list { $$ = $1; $1->next = $2; }
-    | { printf("epsilon decl list\n");$$ = 0; }
+    | {$$ = 0; }
     ;
 
-    decl : TOKEN_IDENT TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); printf("decl creat name is %s\n", $$->name); }
+    decl : TOKEN_IDENT TOKEN_COLON type TOKEN_SEMICOLON { $$ = decl_create($1,$3,0,0,0); }
     | TOKEN_IDENT TOKEN_COLON type TOKEN_ASSIGNMENT expr TOKEN_SEMICOLON { $$ = decl_create($1,$3,$5,0,0);}
     | TOKEN_IDENT TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_ASSIGNMENT TOKEN_CLB stmt_list TOKEN_CRB{$3->params=$5;$$ =decl_create($1,$3,0,$9,0);}
     | TOKEN_IDENT TOKEN_COLON type_func TOKEN_LB param_list TOKEN_RB TOKEN_SEMICOLON{$3->params=$5;$$ =decl_create($1,$3,0,0,0);}
@@ -279,7 +279,7 @@ int num;
     ;
 
     type: TOKEN_VOID {$$ = type_create(TYPE_VOID,  0,0);}
-    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  0,0); printf("integer\n");}
+    | TOKEN_INTEGER {$$ = type_create(TYPE_INTEGER,  0,0); }
     | TOKEN_BOOLEAN {$$ = type_create(TYPE_BOOLEAN,  0,0);}
     | TOKEN_CHAR {$$ = type_create(TYPE_CHARACTER,  0,0);}
     | TOKEN_STRING {$$ = type_create(TYPE_STRING,  0,0);}
@@ -325,7 +325,7 @@ int num;
     factor_bigger : factor_smaller {$$=$1;}
     ;
 
-    factor_smaller: TOKEN_LB expr TOKEN_RB {printf("(E) \n");$$=$2;}
+    factor_smaller: TOKEN_LB expr TOKEN_RB {$$=$2;}
     | TOKEN_SUBTRACT factor_smaller {$$=expr_create(EXPR_MUL, expr_create_integer_literal(-1), $2);} 
     | TOKEN_INTEGER_LITERAL {$$=expr_create_integer_literal(atoi($1));}
     | TOKEN_IDENT {$$=expr_create_name($1);}
