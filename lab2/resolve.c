@@ -16,8 +16,6 @@ struct decl* calling_func;
 
 extern int isThereError;
 
-int param_num=0;
-
 int local_num=0;
 
 int resolve_tree(){
@@ -80,18 +78,13 @@ void decl_resolve(struct decl *d){
 
     if (d->code){
         scope_enter(); //entering param scope
-        param_num=0;
         param_list_resolve(d->type->params);
-        int tmp = local_num;
-        struct decl *tmp_calling_func = calling_func;
         scope_enter(); //entering local scope
         
         calling_func = d;
         local_num=0;
         stmt_resolve(d->code);
         scope_exit(); // exiting local scope
-        local_num=tmp;
-        calling_func=tmp_calling_func;
         scope_exit(); //exiting param scope
     }
 
@@ -139,12 +132,9 @@ void stmt_resolve(struct stmt *s){
             expr_resolve(s->expr);
             break;
         case STMT_BLOCK:
-            int tmp = local_num;
             scope_enter();
-            local_num=0;
             stmt_resolve(s->body);
             scope_exit();
-            local_num=tmp;
             break;
         default:
             break;
@@ -162,9 +152,13 @@ void expr_resolve(struct expr *e){
         } 
         switch(e->symbol->kind){
             case 0 : 
+                e->symbol->which=local_num;
+                local_num++;
                 printf("%s resolves to local %d\n", e->name, e->symbol->which);
                 break;
             case 1 : 
+                e->symbol->which=local_num;
+                local_num++;
                 printf("%s resolves to param %d\n", e->name, e->symbol->which);
                 break;
             default:
@@ -182,8 +176,8 @@ void param_list_resolve(struct param_list *p){
     symbol_t kind = SYMBOL_PARAM;
 
     p->symbol = symbol_create(kind, p->type, p->name);
-    p->symbol->which = param_num;
-    param_num++;
+    //p->symbol->which = local_num;
+    //local_num++;
     scope_bind(p->name, p->symbol);
 
     param_list_resolve(p->next);
