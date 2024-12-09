@@ -323,7 +323,7 @@ void stmt_codegen( struct stmt *s )
             //init expr
             if(s->init_expr){
                 expr_codegen(s->init_expr);
-                //scratch_free(s->init_expr->reg);
+                scratch_free(s->init_expr->reg);
             }
             printf("%s:\n",label_name(loop_label));
             
