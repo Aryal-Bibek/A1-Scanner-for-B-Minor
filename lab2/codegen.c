@@ -114,45 +114,45 @@ void expr_codegen(struct expr * e){
         case EXPR_AND:
             expr_codegen(e->left);
             expr_codegen(e->right);
-            printf("CMP $0, %s\n", scratch_name(e->left->reg));
+            printf("CMP $1, %s\n", scratch_name(e->left->reg));
             set_false_label=label_create();
             exit_label = label_create();
             printf("JNE %s\n",label_name(set_false_label));
-            printf("CMP $0, %s\n", scratch_name(e->right->reg));
+            printf("CMP $1, %s\n", scratch_name(e->right->reg));
             printf("JNE %s\n",label_name(set_false_label));
-            printf("MOVQ $0, %s",scratch_name(e->right->reg));
+            printf("MOVQ $1, %s",scratch_name(e->right->reg)); //set true
             printf("JMP %s\n", label_name(exit_label));
             printf("%s:\n",label_name(set_false_label));
-            printf("MOVQ $1, %s", e->right->reg);
+            printf("MOVQ $0, %s", e->right->reg); //set false
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
         case EXPR_OR:
             expr_codegen(e->left);
             expr_codegen(e->right);
-            printf("CMP $0, %s\n", scratch_name(e->left->reg));
+            printf("CMP $1, %s\n", scratch_name(e->left->reg));
             set_true_label=label_create();
             exit_label = label_create();
             printf("JE %s\n",label_name(set_true_label));
-            printf("CMP $0, %s\n", scratch_name(e->right->reg));
+            printf("CMP $1, %s\n", scratch_name(e->right->reg));
             printf("JE %s\n",label_name(set_true_label));
-            printf("MOVQ $1, %s",scratch_name(e->right->reg));
+            printf("MOVQ $0, %s",scratch_name(e->right->reg)); //set false
             printf("JMP %s\n", label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0, %s", e->right->reg);
+            printf("MOVQ $1, %s", e->right->reg); //set true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
         case EXPR_NOT:
             expr_codegen(e->left);
-            printf("CMP $1, %s\n", scratch_name(e->left->reg));
+            printf("CMP $0, %s\n", scratch_name(e->left->reg));
             set_true_label=label_create();
             exit_label = label_create();
             printf("JE %s\n",label_name(set_true_label));
-            printf("MOVQ $1, %s",scratch_name(e->left->reg));
+            printf("MOVQ $0, %s",scratch_name(e->left->reg)); //set false
             printf("JMP %s\n", label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0, %s", e->left->reg);
+            printf("MOVQ $1, %s", e->left->reg); //set true
             printf("%s:\n",label_name(exit_label));
 
             break;
@@ -174,10 +174,10 @@ void expr_codegen(struct expr * e){
             set_true_label=label_create();
             exit_label = label_create();
             printf("JL %s\n",label_name(set_true_label));
-            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to false
+            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to false
             printf("JMP %s\n",label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to true
+            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
@@ -188,10 +188,10 @@ void expr_codegen(struct expr * e){
             set_true_label=label_create();
             exit_label = label_create();
             printf("JG %s\n",label_name(set_true_label));
-            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to false
+            printf("MOVQ $0, %s\n",scratch_name(e->right->reg)); //set to false
             printf("JMP %s\n",label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to true
+            printf("MOVQ $1, %s\n",scratch_name(e->right->reg)); //set to true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
@@ -201,10 +201,10 @@ void expr_codegen(struct expr * e){
             set_true_label=label_create();
             exit_label = label_create();
             printf("JLE %s\n",label_name(set_true_label));
-            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to false
+            printf("MOVQ $0, %s\n",scratch_name(e->right->reg)); //set to false
             printf("JMP %s\n",label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to true
+            printf("MOVQ $1, %s\n",scratch_name(e->right->reg)); //set to true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
@@ -214,10 +214,10 @@ void expr_codegen(struct expr * e){
             set_true_label=label_create();
             exit_label = label_create();
             printf("JGE %s\n",label_name(set_true_label));
-            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to false
+            printf("MOVQ $0, %s\n",scratch_name(e->right->reg)); //set to false
             printf("JMP %s\n",label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to true
+            printf("MOVQ $1, %s\n",scratch_name(e->right->reg)); //set to true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
@@ -227,10 +227,10 @@ void expr_codegen(struct expr * e){
             set_true_label=label_create();
             exit_label = label_create();
             printf("JE %s\n",label_name(set_true_label));
-            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to false
+            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to false
             printf("JMP %s\n",label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to true
+            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
@@ -240,24 +240,24 @@ void expr_codegen(struct expr * e){
             set_true_label=label_create();
             exit_label = label_create();
             printf("JNE %s\n",label_name(set_true_label));
-            printf("MOVQ $1 ,%s\n",scratch_name(e->right->reg)); //set to false
+            printf("MOVQ $0, %s\n",scratch_name(e->right->reg)); //set to false
             printf("JMP %s\n",label_name(exit_label));
             printf("%s:\n",label_name(set_true_label));
-            printf("MOVQ $0 ,%s\n",scratch_name(e->right->reg)); //set to true
+            printf("MOVQ $1, %s\n",scratch_name(e->right->reg)); //set to true
             printf("%s:\n",label_name(exit_label));
             scratch_free(e->left->reg);
             break;
         case EXPR_INCR:
             expr_codegen(e->left);
-            printf("INC, %s\n",scratch_name(e->left->reg));
-            printf("MOVQ %s ,%s\n",scratch_name(e->right->reg), symbol_codegen(e->left->symbol)); 
+            printf("INCQ, %s\n",scratch_name(e->left->reg));
+            //printf("MOVQ %s ,%s\n",scratch_name(e->right->reg), symbol_codegen(e->left->symbol)); 
             e->reg = e->left->reg;
             scratch_free(e->left->reg);
             break;
         case EXPR_DECR:
             expr_codegen(e->left);
-            printf("DEC, %s\n",scratch_name(e->left->reg));
-            printf("MOVQ %s ,%s\n",scratch_name(e->right->reg), symbol_codegen(e->left->symbol)); 
+            printf("DECQ, %s\n",scratch_name(e->left->reg));
+            //printf("MOVQ %s ,%s\n",scratch_name(e->right->reg), symbol_codegen(e->left->symbol)); 
             e->reg = e->left->reg;
             scratch_free(e->left->reg);
             break;
@@ -323,7 +323,7 @@ void stmt_codegen( struct stmt *s )
             //init expr
             if(s->init_expr){
                 expr_codegen(s->init_expr);
-                scratch_free(s->init_expr->reg);
+                //scratch_free(s->init_expr->reg);
             }
             printf("%s:\n",label_name(loop_label));
             
@@ -336,11 +336,14 @@ void stmt_codegen( struct stmt *s )
             }
 
             // body 
-            stmt_codegen(s->body);
+            if (s->body){
+                stmt_codegen(s->body);
+            }
 
             //next expr
             if(s->next_expr){
                 expr_codegen(s->next_expr);
+                //s->expr->reg=s->next_expr->reg;
                 scratch_free(s->next_expr->reg);
             }
             printf("JMP %s\n",label_name(loop_label));
