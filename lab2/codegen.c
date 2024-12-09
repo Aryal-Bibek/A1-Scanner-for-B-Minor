@@ -47,7 +47,7 @@ void expr_codegen(struct expr * e){
             expr_codegen(e->right);
             //printf("hi\n");
             printf("MOVQ %s, %s\n", scratch_name(e->left->reg), scratch_name(e->right->right));
-            
+            scratch_free(e->right->reg);
             e->reg = e->left->reg;
             break;
 
