@@ -30,20 +30,24 @@ void expr_codegen(struct expr * e){
         case EXPR_NAME:
             e->reg = scratch_alloc();
             printf("MOVQ %s, %s\n",symbol_codegen(e->symbol),scratch_name(e->reg));
+            //printf("hi\n");
             break;
 
         // Interior node: generate children, then add them.
         case EXPR_ADD:
             expr_codegen(e->left);
             expr_codegen(e->right);
-            printf("ADDQ %s, %s\n",scratch_name(e->left->reg),scratch_name(e->right->reg));
-            e->reg = e->right->reg;
-            scratch_free(e->left->reg);
+            printf("ADDQ %s, %s\n",scratch_name(e->right->reg),scratch_name(e->left->reg));
+            e->reg = e->left->reg;
+            scratch_free(e->right->reg);
             break;
 
         case EXPR_ASSIGN:
             expr_codegen(e->left);
-            printf("MOVQ %s, %s\n", scratch_name(e->left->reg), symbol_codegen(e->right->symbol));
+            expr_codegen(e->right);
+            //printf("hi\n");
+            printf("MOVQ %s, %s\n", scratch_name(e->left->reg), scratch_name(e->right->right));
+            
             e->reg = e->left->reg;
             break;
 
@@ -291,16 +295,19 @@ void stmt_codegen( struct stmt *s )
             scratch_free(s->expr->reg);
             break;
         case STMT_IF:
-            else_label = label_create();
+            //else_label = label_create();
             done_label = label_create();
             expr_codegen(s->expr);
             printf("CMP $0, %s\n",scratch_name(s->expr->reg));
             scratch_free(s->expr->reg);
-            printf("JE %s\n",label_name(else_label));
-            stmt_codegen(s->body);
-            printf("JMP %s\n",label_name(done_label));
-            printf("%s:\n",label_name(else_label));
-            stmt_codegen(s->else_body);
+            printf("JE %s\n",label_name(done_label));
+            if (s->body){
+                //printf("into if body\n");
+                stmt_codegen(s->body);
+            }
+            //printf("JMP %s\n",label_name(done_label));
+           // printf("%s:\n",label_name(else_label));
+            //stmt_codegen(s->else_body);
             printf("%s:\n",label_name(done_label));
             break;
 	    case STMT_IF_ELSE:
@@ -310,7 +317,9 @@ void stmt_codegen( struct stmt *s )
             printf("CMP $0, %s\n",scratch_name(s->expr->reg));
             scratch_free(s->expr->reg);
             printf("JE %s\n",label_name(else_label));
-            stmt_codegen(s->body);
+            if (s->body){
+                stmt_codegen(s->body);
+            }
             printf("JMP %s\n",label_name(done_label));
             printf("%s:\n",label_name(else_label));
             stmt_codegen(s->else_body);
@@ -450,6 +459,7 @@ void decl_codegen(struct decl * d){
                 } 
             }
         } else {
+            //printf("decl but stmt\n");
             if (d->value){
                 expr_codegen(d->value);
                 printf("MOVQ %s, %s\n",scratch_name(d->value->reg),symbol_codegen(d->symbol));
