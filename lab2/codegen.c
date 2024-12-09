@@ -248,10 +248,22 @@ void expr_codegen(struct expr * e){
             scratch_free(e->left->reg);
             break;
         case EXPR_INCR:
+            expr_codegen(e->left);
+            printf("INC, %s\n",scratch_name(e->left->reg));
+            printf("MOVQ %s ,%s\n",scratch_name(e->right->reg), symbol_codegen(e->left->symbol)); 
+            e->reg = e->left->reg;
+            scratch_free(e->left->reg);
             break;
         case EXPR_DECR:
+            expr_codegen(e->left);
+            printf("DEC, %s\n",scratch_name(e->left->reg));
+            printf("MOVQ %s ,%s\n",scratch_name(e->right->reg), symbol_codegen(e->left->symbol)); 
+            e->reg = e->left->reg;
+            scratch_free(e->left->reg);
             break;
         case EXPR_ARR:
+            expr_codegen(e->left);
+            e->reg = e->left->reg;
             break;
     }
 }
@@ -261,6 +273,7 @@ void stmt_codegen( struct stmt *s )
     if(!s) return;
     int else_label;
     int done_label;
+    int loop_label;
     switch(s->kind) {
         case STMT_EXPR:
             expr_codegen(s->expr);
@@ -304,10 +317,39 @@ void stmt_codegen( struct stmt *s )
             printf("%s:\n",label_name(done_label));
             break;
         case STMT_FOR:
+            loop_label = label_create();
+            done_label = label_create();
+
+            //init expr
+            if(s->init_expr){
+                expr_codegen(s->init_expr);
+                scratch_free(s->init_expr->reg);
+            }
+            printf("%s:\n",label_name(loop_label));
+            
+            // condition expr
+            if(s->expr){
+                expr_codegen(s->expr);
+                printf("CMP $0, %s\n",scratch_name(s->expr->reg));
+                scratch_free(s->expr->reg);
+                printf("JE %s\n",label_name(done_label));
+            }
+
+            // body 
+            stmt_codegen(s->body);
+
+            //next expr
+            if(s->next_expr){
+                expr_codegen(s->next_expr);
+                scratch_free(s->next_expr->reg);
+            }
+            printf("JMP %s\n",label_name(loop_label));
+            printf("%s:\n",label_name(done_label));
             break;
         case STMT_PRINT:
             break;
         case STMT_BLOCK:
+            stmt_codegen(s->body);
             break;
     }
     stmt_codegen(s->next);
